@@ -1,0 +1,94 @@
+# AI Asset Pipeline
+
+A small, real **agentic system** that turns a written prompt into an approved game sprite,
+the way Seepia turns briefs into playable-ad variants at scale. It is the centrepiece of this
+project for a Senior **AI Systems** role: the game is the artefact, this is the system.
+
+## What it does, in one breath
+
+> **Generate → Validate → Judge → Retry → Escalate.** An AI makes the artwork, automatic rules
+> check it, a second AI grades it against a rubric, weak results are fed back and retried, and
+> anything that still can't pass is handed to a human. Every step is logged; a dashboard shows
+> the result.
+
+This mirrors the "Agent A drafts it, Agent B grades it, Agent A fixes it" pattern, kept at the
+right size: a few small files, no agent framework, runs offline for free.
+
+## The five stages (plain language)
+
+| Stage | What happens | Who/what |
+|---|---|---|
+| 1. Generate | Make a sprite image from the versioned prompt | image provider (AI) |
+| 2. Validate | Hard rules: real PNG, square, transparent, under size budget | deterministic code |
+| 3. Judge | Score 1–5 on 5 quality criteria (reads at scale, silhouette, on-theme, palette, transparency) | LLM judge (Claude) |
+| 4. Retry | If it scores low, send the judge's feedback back and try again | orchestrator |
+| 5. Escalate | If it still can't pass, flag for a **human** — the AI never guesses | human-in-the-loop |
+
+## Run it
+
+**Locally (no API key, fully free — uses offline mock providers):**
+```bash
+npm run pipeline             # generate + validate + judge all 3 sprites
+npm run pipeline:dashboard   # build dashboard.html, open it in a browser
+```
+Options: `node pipeline/agentic/run.mjs --asset fruit` (one asset), `--promote` (copy approved
+sprites into the game).
+
+**With the real Claude judge** (set a key; same command, nothing else changes):
+```bash
+ANTHROPIC_API_KEY=sk-... npm run pipeline
+```
+
+**In Docker** (proves it runs identically anywhere — see `Dockerfile`):
+```bash
+docker build -t parrot-playable .   # runs the gate AND the pipeline + dashboard
+```
+
+**In CI** (`.github/workflows/main.yml`): the same commands run on every push. Adding
+`npm run pipeline` there means each push regenerates and re-grades assets and can publish the
+dashboard — the pipeline is part of the build, not a side script.
+
+## Why this is repeatable and easy to change
+
+- **Repeatable:** one command (`npm run pipeline`) does the whole thing the same way every time,
+  on a laptop, in Docker, or in CI. Nothing is manual.
+- **Version as code:** the generation prompts live in `prompts/*.md` under version control, with
+  a rejected-attempts log — so a prompt change is reviewable and reversible, exactly like source
+  code. The judge's rubric lives in `rubric.mjs`, one source of truth for both AIs.
+- **Changeable when an API changes:** generation and judging are **swappable adapters**
+  (`generate.mjs`, `judge.mjs`). If an image API or model API changes, you edit **one adapter**;
+  the rest of the pipeline does not move. Choosing a different/cheaper model is a config value,
+  not a code change.
+
+| Want to change… | Edit only… |
+|---|---|
+| Which image model makes the art | `generate.mjs` (one adapter) |
+| Which LLM grades it, or a cheaper model | `judge.mjs` model config (`claude-opus-4-8` default; `claude-haiku-4-5` is cheaper) |
+| The quality bar / rubric | `rubric.mjs` |
+| Accept threshold, retries | `run.mjs` config block |
+
+## Observability dashboard
+
+`npm run pipeline:dashboard` reads the logs the pipeline writes (`pipeline/agentic/runs/`) and
+renders **one self-contained `dashboard.html`** (no server). It shows: auto-approval rate,
+average quality score, how many need a human, total spend, and a per-asset table.
+
+## What we are blind to (the honest, senior part)
+
+The dashboard measures **internal quality** (the rubric). It does **not** yet measure **real-world
+ad performance** — click-through, install rate, playtime — which is what should ultimately decide
+which variant wins. The architecture is already shaped to ingest it: every asset and variant is a
+discrete, logged record. Feed the ad network's performance webhook into `runs/` and the north-star
+metric flips from "rubric score" to "variant win-rate," closing the loop from production back into
+generation. **That is the data flywheel; this dashboard is its first half.** Building the flywheel's
+second half is the obvious next step — and it's wiring, not a redesign.
+
+## Files
+
+- `run.mjs` — the orchestrator (the five-stage loop) + CLI + logging
+- `generate.mjs` — image provider adapter (mock today; real image API drops in here)
+- `judge.mjs` — LLM judge adapter (Claude via raw `fetch`, vision + structured tool-use; mock fallback)
+- `rubric.mjs` — the rubric + the judge's tool schema (one source of truth)
+- `png.mjs` — zero-dependency PNG encoder + the in-memory quality gate
+- `dashboard.mjs` — reads the logs, writes the self-contained dashboard
+- `prompts/*.md` — the versioned generation prompts (prompt as code)

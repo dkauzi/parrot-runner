@@ -11,6 +11,8 @@
     "validate:build": "node pipeline/validate-build.mjs dist",
     "test:unit": "node --experimental-strip-types --test \"tests/unit/*.test.ts\"",
     "test:e2e": "playwright test",
+    "pipeline": "node pipeline/agentic/run.mjs",
+    "pipeline:dashboard": "node pipeline/agentic/dashboard.mjs",
     "ci": "npm run test:unit && npm run validate:assets && npm run build:playable && npm run validate:build && npm run test:e2e"
   },
   "dependencies": {

@@ -57,14 +57,19 @@ out. So this repo deliberately imports the unstated requirements:
 | No size / load ceiling | Playables ship under tight KB/MB limits and must load instantly | Build-size + load budget, atlas, near-zero deps |
 | Game-over was just a score screen | Playables end on a CTA end card | End-card spec in `BUILD_PLAN.md` |
 | Keyboard-only input | Playables are mobile-first, touch | Virtual joystick primary, keyboard fallback |
-| Asset gen as a one-off | The role is AI *systems* | `pipeline/validate.mjs` + `pipeline/grade.md` |
-| Risk of over-engineering | Over-build fails the judgment test | Restraint stated and enforced (no agent runtime) |
+| Asset gen as a one-off | The role is AI *systems* | The agentic pipeline in `pipeline/agentic/` (`AGENTIC.md`) |
+| No observability | The role names "observability" | Pipeline logs + self-contained dashboard (`pipeline/agentic/dashboard.mjs`) |
+| Risk of over-engineering | Over-build fails the judgment test | Restraint stated and enforced (mock-by-default, no agent framework) |
 
 ## Repo map
 
+- `AGENTIC.md` - the AI asset pipeline: generate -> validate -> judge -> retry -> escalate, + dashboard
+- `ARCHITECTURE.md` - repeatable + swap-friendly seams (change a provider, not the system)
+- `AUTOMATION.md` - single-file playable build, headless tests, Docker
 - `BUILD_PLAN.md` - core loop, file architecture, end card, tests, order of work
 - `PRODUCTION_BUDGET.md` - FPS, build size, load, dependency policy (the playable-ad contract)
 - `prompts/` - versioned asset-generation prompts (prompt as code)
-- `pipeline/validate.mjs` - deterministic asset gate (zero-dep)
-- `pipeline/grade.md` - judgment-based grading rubric (the Agent-B step, as a rubric)
+- `pipeline/agentic/` - the agentic generate/judge pipeline + observability dashboard
+- `pipeline/validate.mjs` / `validate-build.mjs` - deterministic asset + build gates (zero-dep)
+- `pipeline/grade.md` - the rubric the LLM judge scores against
 - `DECISIONS.md` - the three interview answers, pre-structured, filled as you go

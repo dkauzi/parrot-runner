@@ -19,10 +19,15 @@ RUN npm ci
 
 COPY . .
 
-# Full pipeline as one command: asset gate -> build single-file -> build gate -> headless tests.
+# Full gate as one command: asset gate -> build single-file -> build gate -> headless tests.
 # Any stage failing fails the container build/run, which is the point.
 RUN npm run validate:assets
 RUN npm run build:playable
 RUN npm run validate:build
+
+# The AI asset pipeline runs here too (mock providers, no API key) and renders its dashboard, so
+# "it works anywhere" covers the generation pipeline, not just the game. With ANTHROPIC_API_KEY
+# passed in (docker run -e ANTHROPIC_API_KEY=...), the same command uses the real Claude judge.
+RUN npm run pipeline && npm run pipeline:dashboard
 
 CMD ["npm", "run", "test:e2e"]
