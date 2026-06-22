@@ -1,0 +1,32 @@
+{
+  "name": "parrot-runner",
+  "version": "1.0.0",
+  "description": "Auto-runner: a forward-flying parrot collects fruit. Built like a playable ad.",
+  "private": true,
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack",
+    "build:playable": "webpack --env playable",
+    "validate:assets": "node pipeline/validate.mjs assets/sprites",
+    "validate:build": "node pipeline/validate-build.mjs dist",
+    "test:unit": "node --experimental-strip-types --test \"tests/unit/*.test.ts\"",
+    "test:e2e": "playwright test",
+    "ci": "npm run test:unit && npm run validate:assets && npm run build:playable && npm run validate:build && npm run test:e2e"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/three": "^0.160.0",
+    "css-loader": "^6.10.0",
+    "html-inline-script-webpack-plugin": "^3.2.1",
+    "html-webpack-plugin": "^5.6.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.0"
+  }
+}

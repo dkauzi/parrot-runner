@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sprite manifest",
+  "type": "object",
+  "required": ["sprites"],
+  "properties": {
+    "sprites": {
+      "type": "object",
+      "required": ["parrot", "fruit", "tree"],
+      "properties": {
+        "parrot": { "$ref": "#/$defs/sprite" },
+        "fruit": { "$ref": "#/$defs/sprite" },
+        "tree": { "$ref": "#/$defs/sprite" }
+      }
+    }
+  },
+  "$defs": {
+    "sprite": {
+      "type": "object",
+      "required": ["scale", "aspect"],
+      "properties": {
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "aspect": { "type": "number", "exclusiveMinimum": 0 },
+        "points": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

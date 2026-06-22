@@ -1,0 +1,200 @@
+import { Clock, Fog, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { GameConfig } from './config';
+import { MANIFEST, makeFruitTexture, makeParrotTexture, makeTreeTexture } from './assets';
+import { Parrot } from './Parrot';
+import { Spawner } from './Spawner';
+import { collect } from './Collision';
+import {
+  continuesCombo,
+  comboMultiplier,
+  isRunComplete,
+  pickupValue,
+  runProgress,
+} from './Scoring';
+import { Input } from '../input/Input';
+import { UI } from '../ui/ui';
+import { blip, endChime, startChime, unlockAudio } from './audio';
+import { ensureMraid, fireCta } from '../mraid';
+
+type State = 'menu' | 'playing' | 'gameover';
+
+const PICKUP_REACH = 1.2;
+const FOG_COLOR = 0x9ed27a;
+
+export class Game {
+  private renderer: WebGLRenderer;
+  private scene = new Scene();
+  private camera: PerspectiveCamera;
+  private clock = new Clock();
+  private parrot: Parrot;
+  private spawner: Spawner;
+  private input: Input;
+  private ui: UI;
+
+  private state: State = 'menu';
+  private score = 0;
+  private distance = 0;
+  private elapsed = 0;
+  private chain = 0;
+  private lastPickupAt = -999;
+
+  private fpsSmoothed = 60;
+  private fpsTimer = 0;
+  private shakeT = 0;
+  private camBase: Vector3;
+  private startMs = 0;
+  private frames = 0;
+
+  constructor(
+    private root: HTMLElement,
+    private config: GameConfig,
+    private fastEnd: boolean
+  ) {
+    this.renderer = new WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true, // lets the headless test screenshot the canvas
+    });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // protect FPS on retina
+    this.renderer.setClearColor(0x000000, 0);
+    root.appendChild(this.renderer.domElement);
+
+    this.scene.background = null;
+    this.scene.fog = new Fog(FOG_COLOR, 12, 42);
+
+    this.camera = new PerspectiveCamera(55, 1, 0.1, 100);
+    this.camera.position.set(0, 2.6, 8.5);
+    this.camera.lookAt(0, 1.8, -6);
+    this.camBase = this.camera.position.clone();
+
+    const s = MANIFEST.sprites;
+    this.parrot = new Parrot(makeParrotTexture(), s.parrot);
+    this.scene.add(this.parrot.sprite);
+    this.spawner = new Spawner(
+      this.scene,
+      makeFruitTexture(config.fruitColor),
+      makeTreeTexture(),
+      s.fruit,
+      s.tree,
+      config
+    );
+
+    this.input = new Input(root);
+    this.ui = new UI(root, config.title);
+    this.ui.onStart(() => this.begin());
+    this.ui.onReplay(() => this.begin());
+    this.ui.onCta(() => fireCta());
+
+    ensureMraid();
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+
+  start(): void {
+    this.renderer.setAnimationLoop(() => this.tick());
+    // Auto-start under the fast-end test hook so the run reaches the end card unattended.
+    if (this.fastEnd) this.begin();
+  }
+
+  private begin(): void {
+    unlockAudio();
+    startChime();
+    this.spawner.reset();
+    this.parrot.reset();
+    this.score = 0;
+    this.distance = 0;
+    this.elapsed = 0;
+    this.chain = 0;
+    this.lastPickupAt = -999;
+    this.ui.hideStart();
+    this.ui.hideEnd();
+    this.ui.setScore(0);
+    this.ui.setProgress(0);
+    this.startMs = performance.now();
+    this.state = 'playing';
+  }
+
+  private end(): void {
+    this.state = 'gameover';
+    endChime();
+    this.ui.showEnd(this.score);
+  }
+
+  private tick(): void {
+    const delta = Math.min(this.clock.getDelta(), 0.05); // clamp huge frames (tab refocus)
+
+    this.spawner.update(delta); // keep the world alive on menu + end screens too
+
+    if (this.state === 'playing') {
+      this.parrot.update(delta, this.input.getAxis());
+      this.elapsed += delta;
+      this.distance += this.config.scrollSpeed * delta;
+      this.ui.setProgress(runProgress(this.distance, this.config.runDistance));
+      this.handlePickups();
+      // Fast-end uses wall-clock so automated runs finish in a fixed time regardless of FPS.
+      const done = this.fastEnd
+        ? performance.now() - this.startMs > 1500
+        : isRunComplete(this.distance, this.config.runDistance);
+      if (done) this.end();
+    } else {
+      this.parrot.update(delta, { x: 0, y: 0 }); // idle bob on menu/end
+    }
+
+    this.updateFps(delta);
+    this.applyShake(delta);
+    this.renderer.render(this.scene, this.camera);
+
+    // Heartbeat for the headless test: proves the real game loop is advancing (cheaper and more
+    // meaningful than reading back pixels under software GL).
+    this.frames++;
+    (window as unknown as { __frames: number }).__frames = this.frames;
+  }
+
+  private handlePickups(): void {
+    const fruit = this.spawner.activeFruit();
+    if (fruit.length === 0) return;
+    const positions = fruit.map((f) => f.sprite.position);
+    const hits = collect(this.parrot.position, positions, PICKUP_REACH);
+    for (const i of hits) {
+      this.chain = continuesCombo(this.elapsed, this.lastPickupAt) ? this.chain + 1 : 1;
+      this.lastPickupAt = this.elapsed;
+      this.score += pickupValue(this.config.fruitPoints, this.chain);
+      this.spawner.pickup(fruit[i]);
+      this.ui.setScore(this.score);
+      this.ui.flashCombo(comboMultiplier(this.chain));
+      blip(this.chain);
+      this.shakeT = 0.12; // screen-space punch on pickup
+    }
+  }
+
+  private updateFps(delta: number): void {
+    if (delta > 0) this.fpsSmoothed += (1 / delta - this.fpsSmoothed) * 0.1;
+    this.fpsTimer += delta;
+    if (this.fpsTimer >= 0.25) {
+      this.fpsTimer = 0;
+      this.ui.setFps(this.fpsSmoothed);
+    }
+  }
+
+  private applyShake(delta: number): void {
+    if (this.shakeT > 0) {
+      this.shakeT = Math.max(0, this.shakeT - delta);
+      const m = this.shakeT * 1.2;
+      this.camera.position.set(
+        this.camBase.x + (Math.random() - 0.5) * m,
+        this.camBase.y + (Math.random() - 0.5) * m,
+        this.camBase.z
+      );
+    } else {
+      this.camera.position.copy(this.camBase);
+    }
+  }
+
+  private resize(): void {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(w, h);
+  }
+}
