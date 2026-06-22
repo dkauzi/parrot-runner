@@ -1,4 +1,4 @@
-import { CanvasTexture, SRGBColorSpace, Texture } from 'three';
+import { CanvasTexture, SRGBColorSpace, Texture, TextureLoader } from 'three';
 import manifest from '../../assets/assets.json';
 
 /**
@@ -41,6 +41,48 @@ export function validateManifest(m: unknown): Manifest {
 
 export const MANIFEST: Manifest = validateManifest(manifest);
 
+/**
+ * Discover real sprite PNGs dropped into assets/sprites/ (parrot.png, fruit.png, tree.png).
+ * webpack inlines each as a base64 data URL (asset/inline), so the single-file build stays
+ * self-contained. If a sprite is absent we fall back to the procedural placeholder, so the game
+ * always runs. To ship the AI-generated art: add the PNGs, gate them with pipeline/validate.mjs.
+ */
+const SPRITE_URLS: Partial<Record<'parrot' | 'fruit' | 'tree', string>> = (() => {
+  const map: Record<string, string> = {};
+  try {
+    const ctx = require.context('../../assets/sprites', false, /\.png$/);
+    for (const key of ctx.keys()) {
+      const name = key.replace(/^\.\//, '').replace(/\.png$/, '');
+      const mod = ctx(key);
+      map[name] = typeof mod === 'string' ? mod : (mod as { default: string }).default;
+    }
+  } catch {
+    /* no sprites dir at build time -> everything stays procedural */
+  }
+  return map;
+})();
+
+const loader = new TextureLoader();
+function fromUrl(url: string): Texture {
+  const t = loader.load(url); // returns immediately, fills in asynchronously
+  t.colorSpace = SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+/** Parrot texture: real PNG if present, else procedural placeholder. */
+export function makeParrotTexture(): Texture {
+  return SPRITE_URLS.parrot ? fromUrl(SPRITE_URLS.parrot) : proceduralParrot();
+}
+/** Fruit texture: real PNG if present (tint ignored), else procedural placeholder tinted per variant. */
+export function makeFruitTexture(color: number): Texture {
+  return SPRITE_URLS.fruit ? fromUrl(SPRITE_URLS.fruit) : proceduralFruit(color);
+}
+/** Tree texture: real PNG if present, else procedural placeholder. */
+export function makeTreeTexture(): Texture {
+  return SPRITE_URLS.tree ? fromUrl(SPRITE_URLS.tree) : proceduralTree();
+}
+
 function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');
   c.width = w;
@@ -58,7 +100,7 @@ function texture(c: HTMLCanvasElement): Texture {
 }
 
 /** Parrot seen from behind, wings spread: a clear silhouette over a busy background. */
-export function makeParrotTexture(): Texture {
+function proceduralParrot(): Texture {
   const [c, ctx] = canvas(180, 128);
   const body = '#e53935';
   // tail
@@ -96,7 +138,7 @@ export function makeParrotTexture(): Texture {
 }
 
 /** A round fruit, tinted per variant, with a highlight so it pops. */
-export function makeFruitTexture(color: number): Texture {
+function proceduralFruit(color: number): Texture {
   const [c, ctx] = canvas(96, 96);
   const hex = '#' + color.toString(16).padStart(6, '0');
   const g = ctx.createRadialGradient(38, 34, 6, 48, 48, 46);
@@ -116,7 +158,7 @@ export function makeFruitTexture(color: number): Texture {
 }
 
 /** A jungle tree: trunk + layered canopy. Anchored so the base sits on the scroll plane. */
-export function makeTreeTexture(): Texture {
+function proceduralTree(): Texture {
   const [c, ctx] = canvas(120, 220);
   ctx.fillStyle = '#6d4c41';
   ctx.fillRect(52, 120, 16, 96);
