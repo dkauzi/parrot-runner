@@ -3,7 +3,36 @@
 A forward-flying parrot collects fruit along a jungle path. Start, fly a fixed distance,
 end on a score card.
 
-Built on `winstonrc/threejs-typescript-template` (Vite + TypeScript + Three.js).
+Built on `winstonrc/threejs-typescript-template` (webpack + TypeScript + Three.js).
+
+## Run it
+
+```bash
+npm install            # once
+
+npm start              # dev server with live reload -> http://localhost:9000
+```
+
+Or build and open the single self-contained playable:
+
+```bash
+npm run build:playable # -> dist/index.html (one file, ~0.48 MB)
+open dist/index.html    # runs straight from file://, no server needed
+```
+
+Controls: arrow keys / WASD, or drag the on-screen joystick (touch). Try the variants with
+`?variant=rush` or `?variant=zen` on the URL.
+
+Verify everything:
+
+```bash
+npm run ci             # unit tests -> asset gate -> build -> build gate -> headless e2e
+```
+
+**On GitHub:** pushing to `main` runs the CI workflow (`.github/workflows/ci.yml`) and, once
+Pages is enabled (Settings -> Pages -> Source: GitHub Actions), publishes the playable to
+`https://dkauzi.github.io/parrot-runner/`. Pages serves publicly, so a private repo needs
+GitHub Pro or to be made public for the live URL; otherwise run locally as above.
 
 ## Why this build is shaped the way it is
 
