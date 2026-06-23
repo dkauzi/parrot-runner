@@ -79,7 +79,7 @@ async function run() {
   const judge = getJudge(config.judgeProvider);
   // Each provider gets its own key + model. Adding a provider does not change this shape.
   const judgeModel =
-    config.judgeProvider === 'gemini' ? process.env.GEMINI_MODEL || 'gemini-2.0-flash' : config.judgeModel;
+    config.judgeProvider === 'gemini' ? process.env.GEMINI_MODEL || 'gemini-2.5-flash' : config.judgeModel;
   const judgeApiKey =
     config.judgeProvider === 'gemini' ? process.env.GEMINI_API_KEY : process.env.ANTHROPIC_API_KEY;
 
