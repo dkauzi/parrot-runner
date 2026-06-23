@@ -13,7 +13,16 @@
  *   claude-haiku-4-5  $1/$5
  */
 
+import { Jimp } from 'jimp';
 import { judgeTool, judgePrompt, CRITERIA } from './rubric.mjs';
+
+/** Downscale the image the judge sees: a grader doesn't need full res, and fewer pixels = fewer
+ *  tokens = friendlier to free-tier rate limits. Returns base64 PNG. */
+async function smallBase64(buffer, max = 128) {
+  const img = await Jimp.read(buffer);
+  img.scaleToFit({ w: max, h: max });
+  return (await img.getBuffer('image/png')).toString('base64');
+}
 
 const PRICING = {
   'claude-opus-4-8': [5, 25],
@@ -21,17 +30,19 @@ const PRICING = {
   'claude-haiku-4-5': [1, 5],
 };
 
-/** Retry transient API failures (429/5xx) with exponential backoff — basic resilience. */
-async function fetchWithBackoff(url, options, tries = 4) {
-  let delay = 500;
+/** Retry transient API failures with backoff. 429 (rate limit) waits longer, since free tiers
+ *  meter per-minute; 5xx uses a short backoff. Non-retryable errors return immediately. */
+async function fetchWithBackoff(url, options, tries = 3) {
+  let res;
   for (let attempt = 1; attempt <= tries; attempt++) {
-    const res = await fetch(url, options);
+    res = await fetch(url, options);
     if (res.ok) return res;
     if (res.status !== 429 && res.status < 500) return res; // non-retryable
     if (attempt === tries) return res;
-    await new Promise((r) => setTimeout(r, delay));
-    delay *= 2;
+    const wait = res.status === 429 ? 15000 * attempt : 800 * attempt;
+    await new Promise((r) => setTimeout(r, wait));
   }
+  return res;
 }
 
 /** Real LLM judge: vision input + forced tool-use for a structured verdict. */
@@ -86,17 +97,18 @@ export async function anthropicJudge({ buffer, asset, model, apiKey }) {
  *
  * Plain-language: same job as the Claude judge — look at the sprite, score it against the rubric —
  * but using Google's free model. Asks for JSON back so we never parse free text. Activates when
- * GEMINI_API_KEY is set. Default model gemini-1.5-flash (override with GEMINI_MODEL).
+ * GEMINI_API_KEY is set. Default model gemini-2.0-flash (override with GEMINI_MODEL).
  */
 export async function geminiJudge({ buffer, asset, model, apiKey }) {
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const shape = `{${CRITERIA.map((c) => `"${c.key}": <integer 1-5>`).join(', ')}, "reasoning": "<string>"}`;
+  const data = await smallBase64(buffer);
   const body = {
     contents: [
       {
         parts: [
-          { inline_data: { mime_type: 'image/png', data: buffer.toString('base64') } },
+          { inline_data: { mime_type: 'image/png', data } },
           { text: `${judgePrompt(asset)}\nRespond ONLY with JSON of exactly this shape: ${shape}` },
         ],
       },
