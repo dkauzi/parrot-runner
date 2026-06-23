@@ -81,6 +81,47 @@ export async function anthropicJudge({ buffer, asset, model, apiKey }) {
   return { ok: true, verdict: block.input, provider: 'anthropic', model, costUsd };
 }
 
+/**
+ * FREE real vision judge via Google Gemini (generous free tier).
+ *
+ * Plain-language: same job as the Claude judge — look at the sprite, score it against the rubric —
+ * but using Google's free model. Asks for JSON back so we never parse free text. Activates when
+ * GEMINI_API_KEY is set. Default model gemini-1.5-flash (override with GEMINI_MODEL).
+ */
+export async function geminiJudge({ buffer, asset, model, apiKey }) {
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const shape = `{${CRITERIA.map((c) => `"${c.key}": <integer 1-5>`).join(', ')}, "reasoning": "<string>"}`;
+  const body = {
+    contents: [
+      {
+        parts: [
+          { inline_data: { mime_type: 'image/png', data: buffer.toString('base64') } },
+          { text: `${judgePrompt(asset)}\nRespond ONLY with JSON of exactly this shape: ${shape}` },
+        ],
+      },
+    ],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+  };
+
+  const res = await fetchWithBackoff(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, reason: `api ${res.status}`, provider: 'gemini', model };
+  const json = await res.json();
+  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) return { ok: false, reason: 'no content returned', provider: 'gemini', model };
+  let verdict;
+  try {
+    verdict = JSON.parse(text);
+  } catch {
+    return { ok: false, reason: 'non-JSON verdict', provider: 'gemini', model };
+  }
+  return { ok: true, verdict, provider: 'gemini', model, costUsd: 0 }; // free tier
+}
+
 /** Offline judge: deterministic scores so the pipeline runs with no API key. */
 export async function mockJudge({ buffer, asset }) {
   // Derive stable pseudo-scores from the image bytes so re-runs are repeatable.
@@ -93,7 +134,9 @@ export async function mockJudge({ buffer, asset }) {
   return { ok: true, verdict, provider: 'mock', model: 'mock', costUsd: 0 };
 }
 
-/** Pick the judge based on config + whether a key is present. */
+/** Pick the judge based on config. Swappable adapter — add a provider here, nothing else moves. */
 export function getJudge(provider) {
-  return provider === 'anthropic' ? anthropicJudge : mockJudge;
+  if (provider === 'anthropic') return anthropicJudge;
+  if (provider === 'gemini') return geminiJudge;
+  return mockJudge;
 }

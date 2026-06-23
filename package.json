@@ -12,10 +12,12 @@
     "test:unit": "node --import tsx --test tests/unit/collision.test.ts tests/unit/scoring.test.ts",
     "test:e2e": "playwright test",
     "pipeline": "node pipeline/agentic/run.mjs",
+    "pipeline:optimize": "node pipeline/agentic/optimize.mjs",
     "pipeline:dashboard": "node pipeline/agentic/dashboard.mjs",
     "ci": "npm run test:unit && npm run validate:assets && npm run build:playable && npm run validate:build && npm run test:e2e"
   },
   "dependencies": {
+    "jimp": "^1.6.1",
     "three": "^0.160.0"
   },
   "devDependencies": {

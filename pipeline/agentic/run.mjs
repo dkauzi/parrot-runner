@@ -35,8 +35,13 @@ const ROOT = join(HERE, '..', '..');
 // ---- Config: the single place to change behaviour (model selection, thresholds, providers) ----
 const config = {
   assets: ['parrot', 'fruit', 'tree'],
-  imageProvider: 'mock', // swap for a real image API adapter in generate.mjs
-  judgeProvider: process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'mock',
+  imageProvider: process.env.IMAGE_PROVIDER || 'mock', // 'pollinations' = free real AI art
+  // Judge auto-selects by which key is present: Claude (paid) > Gemini (free) > mock (offline).
+  judgeProvider: process.env.ANTHROPIC_API_KEY
+    ? 'anthropic'
+    : process.env.GEMINI_API_KEY
+      ? 'gemini'
+      : 'mock',
   judgeModel: process.env.JUDGE_MODEL || 'claude-opus-4-8', // cheaper: claude-haiku-4-5
   threshold: Number(process.env.GRADE_THRESHOLD || 18), // accept at >= 18/25
   minCriterion: 3, // and no single criterion below 3
@@ -72,6 +77,11 @@ async function run() {
 
   const generate = getImageProvider(config.imageProvider);
   const judge = getJudge(config.judgeProvider);
+  // Each provider gets its own key + model. Adding a provider does not change this shape.
+  const judgeModel =
+    config.judgeProvider === 'gemini' ? process.env.GEMINI_MODEL || 'gemini-1.5-flash' : config.judgeModel;
+  const judgeApiKey =
+    config.judgeProvider === 'gemini' ? process.env.GEMINI_API_KEY : process.env.ANTHROPIC_API_KEY;
 
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const logPath = join(config.runsDir, `run-${runId}.jsonl`);
@@ -79,7 +89,7 @@ async function run() {
 
   console.log(
     `Pipeline run ${runId}  |  image=${config.imageProvider}  judge=${config.judgeProvider}` +
-      ` (${config.judgeModel})  threshold=${config.threshold}/${MAX_SCORE}\n`
+      ` (${judgeModel})  threshold=${config.threshold}/${MAX_SCORE}\n`
   );
 
   for (const asset of assets) {
@@ -93,7 +103,19 @@ async function run() {
     for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
       attemptsUsed = attempt;
       const started = Date.now();
-      const { buffer, provider: imgProvider } = await generate(asset, prompt + feedback, attempt);
+
+      // STAGE 1: generate (network providers can fail transiently -> log and retry, don't crash)
+      let buffer;
+      try {
+        ({ buffer } = await generate(asset, prompt + feedback, attempt));
+      } catch (err) {
+        logLine(logPath, {
+          runId, asset, attempt, stage: 'generate', accepted: false,
+          error: err.message, latencyMs: Date.now() - started,
+        });
+        feedback += `\nGeneration failed (${err.message}); retrying.`;
+        continue;
+      }
 
       // STAGE 2: deterministic gate
       const vfails = validateBuffer(buffer);
@@ -107,7 +129,7 @@ async function run() {
       }
 
       // STAGE 3: LLM judge
-      const result = await judge({ buffer, asset, model: config.judgeModel, apiKey: process.env.ANTHROPIC_API_KEY });
+      const result = await judge({ buffer, asset, model: judgeModel, apiKey: judgeApiKey });
       costUsd += result.costUsd || 0;
       if (!result.ok) {
         // Malformed/refused verdict -> escalate to a human (safety: never guess).
