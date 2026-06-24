@@ -9,7 +9,6 @@ import {
   PlaneGeometry,
   RepeatWrapping,
   Scene,
-  Texture,
   TextureLoader,
   Vector3,
   WebGLRenderer,
@@ -61,7 +60,6 @@ export class Game {
   private shakeT = 0;
   private camBase: Vector3;
   private startMs = 0;
-  private groundTex: Texture | null = null;
   private frames = 0;
 
   constructor(
@@ -91,8 +89,8 @@ export class Game {
     sun.position.set(2, 5, 4);
     this.scene.add(hemi, sun);
 
-    // Scrolling jungle FLOOR — the "race track" that simulates forward motion. The geometry +
-    // UV-scroll is deterministic code (the speed sensation); the AI provides only the texture.
+    // Static jungle FLOOR — a stable ground reference (AI-textured). Motion is carried by the
+    // trees and fruit passing the camera (like fixed lamp posts on a freeway), not by the ground.
     const groundTex = new TextureLoader().load(groundUrl);
     groundTex.wrapS = groundTex.wrapT = RepeatWrapping;
     groundTex.repeat.set(6, 30);
@@ -100,7 +98,6 @@ export class Game {
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.4, -100);
     this.scene.add(ground);
-    this.groundTex = groundTex;
 
     this.camera = new PerspectiveCamera(55, 1, 0.1, 100);
     this.camera.position.set(0, 2.6, 8.5);
@@ -183,8 +180,6 @@ export class Game {
     const delta = Math.min(this.clock.getDelta(), 0.05); // clamp huge frames (tab refocus)
 
     this.spawner.update(delta); // keep the world alive on menu + end screens too
-    // Scroll the floor texture toward the camera = the sensation of flying forward (the "road").
-    if (this.groundTex) this.groundTex.offset.y -= this.config.scrollSpeed * delta * 0.02;
 
     if (this.state === 'playing') {
       this.parrot.update(delta, this.input.getAxis());
