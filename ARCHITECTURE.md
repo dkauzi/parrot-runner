@@ -56,3 +56,13 @@ artifacts — nothing on it is hand-written. It started as a scaling story and i
 both technical and non-technical readers can see what was made, whether it's good, what it cost, and
 what needs attention. The architecture stayed shaped to feed it (everything it charts — variant id, score, outcome, is
 already a discrete, logged value), so adding it later is wiring, not a redesign.
+
+## The closed loop (the data flywheel)
+
+Quality grading answers *"does it look good?"*; the north-star is *"which variant performs in
+play?"*. The game emits `window.__telemetry` (variant, score, pickups, duration) each run;
+`collect-telemetry.mjs` aggregates it per variant into engagement, and the dashboard ranks the
+variants and recommends which to generate more of. Locally this runs on Playwright; in production
+the identical shape is fed by the ad-network's performance webhook — production play feeds straight
+back into what the pipeline generates next. That feedback loop is the system getting smarter each
+cycle, not a one-off build.

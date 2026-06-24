@@ -107,3 +107,19 @@ second half is the obvious next step — and it's wiring, not a redesign.
 - `png.mjs` — zero-dependency PNG encoder + the in-memory quality gate
 - `dashboard.mjs` — reads the logs, writes the self-contained dashboard
 - `prompts/*.md` — the versioned generation prompts (prompt as code)
+
+## The closed loop (the data flywheel)
+
+The rubric measures *"does the asset look good?"*. The real north-star is *"which variant performs
+in play?"*. The game emits `window.__telemetry` (variant, score, pickups, duration) every run;
+`collect-telemetry.mjs` aggregates it **per variant** into an engagement score, and the dashboard's
+**"Closing the loop"** panel ranks them and recommends *which variant to generate more of*. Locally
+that's Playwright runs; in production the **same shape** is fed by the ad-network's performance
+webhook — so production play feeds straight back into what the pipeline generates next.
+
+```
+generate → grade → ship variant → real-play telemetry → rank variants → generate more of the winner
+                                        (closes here)
+```
+
+Run it: `npm run telemetry` then `npm run pipeline:dashboard`.
