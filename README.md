@@ -4,6 +4,8 @@ A forward-flying parrot collects fruit along a jungle path. Start, fly a fixed d
 end on a score card.
 
 see it in action here url: https://dkauzi.github.io/parrot-runner/   
+<img width="340" height="191" alt="download" src="https://github.com/user-attachments/assets/e4195397-6f5f-4cf8-beb8-06805c5ee86a" />
+
 
 
 Built on `winstonrc/threejs-typescript-template` (webpack + TypeScript + Three.js).
