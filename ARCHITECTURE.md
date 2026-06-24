@@ -43,17 +43,16 @@ a playable-ad studio spins up A/B creatives at volume.
 
 ## Collaboration and scaling (where a dashboard belongs, and where it does not)
 
-The collaboration surface for THIS take-home is deliberately lightweight and already present:
+The collaboration surface for this project is deliberately lightweight and already present:
 
 - **`config.ts`** lets a designer/PM propose a new variant without reading the engine.
 - **`pipeline/grade.md`** is a shared rubric: anyone can score a generated asset/variant against
   the same criteria, and the log is the shared record.
 - **`DECISIONS.md`** is the shared reasoning trail (which tool, why, what was rejected).
 
-A live **dashboard** (variant win-rates, asset quality scores, gap scans, model-drift alerts) is
-the right idea at *scale*, hundreds of variants in production, and it is described as the scaling
-story, not built here. Building a metrics dashboard for a one-file take-home would be the exact
-over-engineering this role is tested on. The honest line: ship the config + rubric + decision log
-now; the dashboard reads from those same artifacts once volume justifies it. The architecture is
-already shaped to feed one (everything a dashboard would chart, variant id, score, outcome, is
+A live **dashboard** (variant win-rates, asset quality scores, the agentic loop, tests, cost, and
+the closed flywheel) is built (`pipeline/agentic/dashboard.mjs`) and reads only from the logged
+artifacts — nothing on it is hand-written. It started as a scaling story and is now the single place
+both technical and non-technical readers can see what was made, whether it's good, what it cost, and
+what needs attention. The architecture stayed shaped to feed it (everything it charts — variant id, score, outcome, is
 already a discrete, logged value), so adding it later is wiring, not a redesign.

@@ -89,13 +89,13 @@ if (offenders.length === 0) {
   for (const o of offenders) console.log(`        ${o.file}: ${o.urls.join(', ')}`);
 }
 
-// 4. MRAID + CTA hooks (warn only: optional for the take-home, required for production)
+// 4. MRAID + CTA hooks (warn only: optional here, required for production)
 if (hasMraidRef && hasCtaOpen) {
   console.log('PASS  MRAID + mraid.open CTA present');
 } else {
   warns++;
   console.log(`WARN  MRAID hooks missing (mraid.js: ${hasMraidRef}, mraid.open: ${hasCtaOpen}) `
-    + '- required for a production playable, optional for this assignment');
+    + '- required for a production playable, optional for this build');
 }
 
 console.log(`\n${hardFails} hard failure(s), ${warns} warning(s).`);

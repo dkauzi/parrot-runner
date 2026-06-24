@@ -109,8 +109,20 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
    provider outage — it falls back.
 7. **Observability everywhere.** Every stage is a logged span (trace id, outcome, latency). The
    dashboard reads those logs — nothing on it is hand-written.
-8. **Right-sized restraint.** No agent framework for a few assets; no telemetry backend for a
-   take-home. Built the high-signal pieces; left clean seams for the rest.
+8. **Right-sized restraint.** No agent framework for a few assets; built the high-signal pieces.
+9. **Closed the loop.** Real play (`window.__telemetry`) is aggregated per variant into engagement and
+   ranked, so the north-star is *which variant performs*, not just *which looks good* — the flywheel.
+10. **A second validate agent checks the play experience, not just assets.** `visual-eval` plays the
+    built game, screenshots real gameplay, and grades the **camera/framing** (deterministic: is the
+    mid-frame mostly floor? + AI: is the bird well-framed for play?). This is what caught the
+    "upside-down" camera bug that every functional test passed straight through.
+11. **AI is metered.** Image gens and judge calls are counted and costed on the dashboard (free tiers →
+    ~$0, but tracked so it scales honestly).
+12. **Live dashboard == local.** `dashboard.html` is fully self-contained (data/images inlined), so
+    Pages serves exactly what's built — `build:pages` just copies it, no browser or keys in CI.
+
+> The hard part was never the code — it was the **judgment**: where to draw the AI/deterministic line,
+> why the AI judge can't be the sole arbiter, and catching a camera bug the green tests sailed past.
 
 ---
 

@@ -45,6 +45,24 @@ const magentaPct = (magenta / (d.length / 4)) * 100;
 const detIssues = [];
 if (magentaPct > 1.5) detIssues.push(`stray magenta/pink in ${magentaPct.toFixed(1)}% of the frame (leftover chroma-key)`);
 
+// ---- DETERMINISTIC camera/playability check: the play area must be visible, not all-ground ----
+// Sample a horizontal band across the vertical middle of the frame; if it's almost entirely the
+// green floor, the camera is pitched too far down (bad play view) — the bug we hit and fixed.
+const W = img.bitmap.width;
+const H = img.bitmap.height;
+let floorish = 0;
+let band = 0;
+for (let y = Math.floor(H * 0.45); y < Math.floor(H * 0.6); y++) {
+  for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4;
+    band++;
+    if (d[i + 1] > d[i] + 12 && d[i + 1] > d[i + 2] + 12) floorish++; // green-dominant = floor
+  }
+}
+const midFloorPct = band ? (floorish / band) * 100 : 0;
+if (midFloorPct > 85)
+  detIssues.push(`camera looks too far down — ${midFloorPct.toFixed(0)}% of mid-frame is floor, leaving little play view`);
+
 // ---- AI judge (strict) ----
 const key = process.env.GEMINI_API_KEY;
 let ai = { issues: [], score: null, summary: 'AI judge skipped (no key)' };
@@ -55,8 +73,10 @@ if (key) {
     'jungle flying collectible game. Hunt for DEFECTS and report each: is the bird/parrot upright ' +
     'and flying forward (NOT upside-down or nose-diving)? Are collectible/tree sprites clean cutouts ' +
     '(no coloured background boxes)? Any visible texture SEAMS or mirrored tiling on the ground? ' +
-    'Stray pink/magenta blotches? Floating or wrongly-scaled objects? Be harsh: 5 = flawless. ' +
-    'Respond ONLY JSON: {"score": <integer 1-5>, "issues": ["..."], "summary": "<one sentence>"}.';
+    'Stray pink/magenta blotches? Floating or wrongly-scaled objects? And the CAMERA/play view: is ' +
+    'the bird well-framed with a clear view of the path ahead (good to play), not staring at the floor ' +
+    'or too high/low? Be harsh: 5 = flawless. Also return "camera": "good"|"poor" with a reason. ' +
+    'Respond ONLY JSON: {"score": <integer 1-5>, "issues": ["..."], "camera": "good|poor", "summary": "<one sentence>"}.';
   const body = {
     contents: [{ parts: [{ inline_data: { mime_type: 'image/png', data: shot.toString('base64') } }, { text: prompt }] }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0 },

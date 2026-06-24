@@ -97,6 +97,12 @@ try {
 } catch {
   /* not run */
 }
+let tests = null;
+try {
+  tests = JSON.parse(readFileSync(join(HERE, 'out', 'tests.json'), 'utf8'));
+} catch {
+  /* not run */
+}
 try {
   screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
 } catch {
@@ -283,6 +289,12 @@ const topCause = Object.entries(causeCounts).sort((a, b) => b[1] - a[1])[0];
 const insightRows = Object.entries(causeCounts)
   .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
   .join('');
+
+// ---- Cost & tokens: AI is metered. Show how much was spent (free providers => ~$0) ----
+const aiImageCalls = attempts.filter((a) => a.stage === 'generate' && !a.error).length;
+const aiJudgeCalls = allJudge.length;
+const totalCostUsd = attempts.reduce((s, a) => s + (a.costUsd || 0), 0);
+const estTokens = aiJudgeCalls * 320; // ~vision+JSON judge call; image gen is not token-metered
 
 // ---- Full run trace (observability): every stage is a logged span with outcome + latency ----
 const trace = attempts.filter((a) => a.runId === latestId).sort((a, b) => (a.ts < b.ts ? -1 : 1));
@@ -494,7 +506,42 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
    topCause
      ? `<h2>Operational insights &mdash; what caused the most rework</h2>
  <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> &mdash; where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped &mdash; fail loud, not silent.)</div>
- <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>`
+ <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>
+ <div class="sub" style="margin-top:10px"><b>What was actually hard:</b> not the code &mdash; the <b>judgment calls</b>. Where to draw the AI/deterministic line, why the AI judge can't be the sole arbiter (it gave a buggy frame 5/5), and finding the camera bug the functional tests passed straight through. The build is cheap; the <i>decisions</i> are the work.</div>
+ <h2>💸 Cost &amp; tokens (AI is metered)</h2>
+ <div class="sub" style="margin-bottom:10px">Every AI call is counted. This whole pipeline runs on free tiers, so spend is ~$0 &mdash; but it's tracked so it scales honestly.</div>
+ <table><thead><tr><th>Meter</th><th>Value</th></tr></thead><tbody>
+   <tr><td>AI image generations</td><td>${aiImageCalls} <span class="sub">(Pollinations, $0)</span></td></tr>
+   <tr><td>AI judge calls</td><td>${aiJudgeCalls} <span class="sub">(Gemini free tier)</span></td></tr>
+   <tr><td>Est. judge tokens</td><td>~${estTokens.toLocaleString()}</td></tr>
+   <tr><td>Total cost</td><td><b>$${totalCostUsd.toFixed(4)}</b></td></tr>
+ </tbody></table>`
+     : ''
+ }
+
+ <h2>🔄 The data flywheel (the whole loop)</h2>
+ <div class="sub" style="margin-bottom:10px">Every stage below is built and observable on this page. Production play feeds back into what we generate next &mdash; the system gets smarter each cycle.</div>
+ <pre style="line-height:1.5;overflow-x:auto">  ┌───────────────────────────────────────────────────────────────────────────┐
+  │                                                                           ▼
+  │   📝 prompt-as-code ─▶ 🎨 GENERATE ─▶ 🟢 VALIDATE ─▶ 🔵 AI JUDGE ─▶ 🔁 RETRY ─▶ 🙋 ESCALATE
+  │      (versioned)        (AI art)       (hard rules)   (taste, +det     (fix &      (human if
+  │                                                        fallback)        re-prompt)  unsure)
+  │                                                                              │
+  │                                                                              ▼
+  │   🏆 generate more  ◀─ 📊 RANK variants ◀─ 🎯 REAL-PLAY TELEMETRY ◀─ 🕹️ SHIP playable variant
+  │      of the winner      (engagement)        (score · pickups · camera QA)   (validated build)
+  └───────────────────────────────────────────────────────────────────────────┘
+   Deterministic gates everywhere · AI only for judgment · human is the final judge · no guessing</pre>
+
+ ${
+   tests
+     ? `<h2>✅ Functional tests &amp; regression (re-run on every code change)</h2>
+ <div class="sub" style="margin-bottom:10px">CI runs these on every push, so a code change can't silently break play. Unit = game logic; e2e = the real built game in a browser; regression = the golden eval guarding the AI judge from drift.</div>
+ <table><thead><tr><th>Suite</th><th>Result</th><th>Cases</th></tr></thead><tbody>
+   <tr><td>🟢 Unit (logic)</td><td><b>${tests.unit.passed}/${tests.unit.total}</b> ${tests.unit.passed === tests.unit.total ? '✅' : '❌'}</td><td class="sub">${tests.unit.cases.map((c) => c.name).join(' · ') || '—'}</td></tr>
+   <tr><td>🔵 e2e (built game)</td><td><b>${tests.e2e.passed}/${tests.e2e.total}</b> ${tests.e2e.passed === tests.e2e.total ? '✅' : '❌'}</td><td class="sub">${tests.e2e.cases.map((c) => c.name).join(' · ') || '—'}</td></tr>
+   ${tests.regression ? `<tr><td>🟣 Regression (judge drift)</td><td><b>${tests.regression.passed ?? '—'}/${tests.regression.total ?? '—'}</b></td><td class="sub">${tests.regression.summary}</td></tr>` : ''}
+ </tbody></table>`
      : ''
  }
 
@@ -540,10 +587,11 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
   ultimately pick the winning variant.</p>
   <p>Every asset is already a discrete, logged record, so feeding the ad network's performance webhook into
   <code>runs/</code> flips the north-star from "rubric score" to "variant win-rate," closing the loop from
-  production back into generation. <b>That is the data flywheel; this dashboard is its first half.</b></p>
-  <p>The game already emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups,
-  score, duration) &mdash; the seed of that loop. A collector + champion/challenger selector is the
-  remaining piece (a backend, out of scope for a take-home).</p>
+  production back into generation. <b>That is the data flywheel, and it is now closed end-to-end on this page.</b></p>
+  <p>The game emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups, score,
+  duration); the collector aggregates it per variant into engagement, and the champion/challenger
+  selector recommends what to promote. Swapping the local collector for a production performance
+  webhook is the only remaining change &mdash; the shape is identical.</p>
  </div>
 </main></body></html>`;
 

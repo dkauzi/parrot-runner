@@ -24,7 +24,7 @@ and a total >= 18 / 25**. Log every graded variant so a regression is traceable 
 | fruit  | v0.1 | | | | | | | | |
 | tree   | v0.1 | | | | | | | | |
 
-## How this scales (the interview answer)
+## How this scales
 
 For three assets: this rubric + `validate.mjs` is the whole pipeline, run by hand.
 For 300 ad variants: same two stages, automated. The validator becomes a CI gate; the grader
