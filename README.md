@@ -17,9 +17,9 @@ The pipeline is the point.
 
 ▶️ **Play it here :** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 
 
-📊 **Dashboard 
+📊 **Dashboard AI Pipeline Observability 
 &nbsp;·&nbsp; 
-https://dkauzi.github.io/parrot-runner/dashboard.html
+** https://dkauzi.github.io/parrot-runner/dashboard.html
 
 observability is build in from day 1:** 
 
