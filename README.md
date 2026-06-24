@@ -36,32 +36,17 @@ GitHub Pro or to be made public for the live URL; otherwise run locally as above
 
 ## Why this build is shaped the way it is
 
-This is a home assignment for a **Senior AI Systems Engineer** role at Seepia, a company that
-makes **playable ads**. The brief asks for a parrot game, but the real test is whether the
-build reflects their product reality and their actual job, neither of which the brief spells
-out. So this repo deliberately imports the unstated requirements:
 
 - It is built like a **playable ad**, not a generic game (see `PRODUCTION_BUDGET.md`).
+- 
 - The asset workflow is a **reproducible generate -> validate -> grade pipeline**
   (see `pipeline/`), a miniature of the variant-generate-and-grade systems the role exists
   to build, kept deliberately small (no agent framework) because three assets do not justify
   one. Knowing that boundary is the senior signal.
-- The thinking is an artifact, not a claim (see `DECISIONS.md`).
+  
+- The thinking is an artifact, not just a claim (see `DECISIONS.md`).
 
-## What we were blind to in v1, and how v2 addresses it
 
-| Blind spot | Why it matters to Seepia | Addressed by |
-|---|---|---|
-| Treated it as a generic game | They ship playable ads, not games | Playable-ad framing throughout |
-| Ignored the FPS counter in the reference mocks ("53 FPS", "33 FPS") | A perf readout in a *concept image* is a planted signal that performance is first-class | FPS HUD + frame budget in `PRODUCTION_BUDGET.md` |
-| No size / load ceiling | Playables ship under tight KB/MB limits and must load instantly | Build-size + load budget, atlas, near-zero deps |
-| Game-over was just a score screen | Playables end on a CTA end card | End-card spec in `BUILD_PLAN.md` |
-| Keyboard-only input | Playables are mobile-first, touch | Virtual joystick primary, keyboard fallback |
-| Asset gen as a one-off | The role is AI *systems* | The agentic pipeline in `pipeline/agentic/` (`AGENTIC.md`) |
-| No observability | The role names "observability" | Pipeline logs + self-contained dashboard (`pipeline/agentic/dashboard.mjs`) |
-| Risk of over-engineering | Over-build fails the judgment test | Restraint stated and enforced (mock-by-default, no agent framework) |
-
-## Repo map
 
 - `AGENTIC.md` - the AI asset pipeline: generate -> validate -> judge -> retry -> escalate, + dashboard
 - `ARCHITECTURE.md` - repeatable + swap-friendly seams (change a provider, not the system)
