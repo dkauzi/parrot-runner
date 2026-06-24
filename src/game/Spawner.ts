@@ -1,4 +1,13 @@
-import { Scene, Sprite, SpriteMaterial, Texture } from 'three';
+import {
+  DoubleSide,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  Scene,
+  Sprite,
+  SpriteMaterial,
+  Texture,
+} from 'three';
 import { GameConfig } from './config';
 import { SpriteSpec } from './assets';
 
@@ -26,9 +35,16 @@ interface Item {
   baseY: number; // resting height, around which the fruit bobs
 }
 
+// Trees are FIXED-orientation planes (not camera-facing billboards), so as you fly past they show
+// real perspective foreshortening — like driving past roadside lamp posts, not turning signs.
+interface Tree {
+  mesh: Mesh;
+  halfHeight: number;
+}
+
 export class Spawner {
   private fruit: Item[] = [];
-  private trees: Item[] = [];
+  private trees: Tree[] = [];
   private sinceFruit = 0;
   private sinceTree = 0;
   private treeSide = 1;
@@ -43,9 +59,10 @@ export class Spawner {
     private config: GameConfig
   ) {
     for (let i = 0; i < FRUIT_POOL; i++) this.fruit.push(this.make(fruitTextures[0], fruitSpec));
-    for (let i = 0; i < TREE_POOL; i++) this.trees.push(this.make(treeTex, treeSpec));
+    for (let i = 0; i < TREE_POOL; i++) this.trees.push(this.makeTree(treeTex, treeSpec));
   }
 
+  /** Fruit = camera-facing billboard sprite (a collectible you look straight at). */
   private make(tex: Texture, spec: SpriteSpec): Item {
     const mat = new SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
     const sprite = new Sprite(mat);
@@ -55,6 +72,23 @@ export class Spawner {
     sprite.visible = false;
     this.scene.add(sprite);
     return { sprite, baseScaleX: sx, baseScaleY: sy, collected: false, popT: 0, phase: 0, baseY: 0 };
+  }
+
+  /** Tree = fixed-orientation textured plane (a roadside prop you fly past, not a billboard). */
+  private makeTree(tex: Texture, spec: SpriteSpec): Tree {
+    const w = spec.scale * spec.aspect;
+    const h = spec.scale;
+    const mat = new MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthWrite: false,
+      side: DoubleSide,
+      fog: true,
+    });
+    const mesh = new Mesh(new PlaneGeometry(w, h), mat);
+    mesh.visible = false;
+    this.scene.add(mesh);
+    return { mesh, halfHeight: h / 2 };
   }
 
   /** Advance the world one frame. */
@@ -80,10 +114,10 @@ export class Spawner {
         (it.sprite.material as SpriteMaterial).rotation += delta * 0.7;
       }
     }
-    for (const it of this.trees) {
-      if (!it.sprite.visible) continue;
-      it.sprite.position.z += move;
-      if (it.sprite.position.z > RECYCLE_Z) it.sprite.visible = false;
+    for (const t of this.trees) {
+      if (!t.mesh.visible) continue;
+      t.mesh.position.z += move;
+      if (t.mesh.position.z > RECYCLE_Z) t.mesh.visible = false;
     }
 
     // Spawn ahead based on distance travelled.
@@ -126,15 +160,14 @@ export class Spawner {
   }
 
   private spawnTree(): void {
-    const it = this.trees.find((t) => !t.sprite.visible);
-    if (!it) return;
+    const t = this.trees.find((tr) => !tr.mesh.visible);
+    if (!t) return;
     // Lined along the route at a consistent roadside distance, alternating sides (lamp-post rows).
     const x = this.treeSide * (TREE_X + rand(-0.3, 0.5));
     this.treeSide *= -1;
     // Grounded: the base of the tree sits on the scrolling floor, so it reads as a fixed prop.
-    const y = FLOOR_Y + it.baseScaleY / 2;
-    it.sprite.position.set(x, y, SPAWN_Z);
-    it.sprite.visible = true;
+    t.mesh.position.set(x, FLOOR_Y + t.halfHeight, SPAWN_Z);
+    t.mesh.visible = true;
   }
 
   /** Collectible fruit currently in play (visible and not already collected). */
@@ -149,7 +182,8 @@ export class Spawner {
   }
 
   reset(): void {
-    [...this.fruit, ...this.trees].forEach((it) => this.retire(it));
+    this.fruit.forEach((it) => this.retire(it));
+    this.trees.forEach((t) => (t.mesh.visible = false));
     this.sinceFruit = this.sinceTree = 0;
   }
 }
