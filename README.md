@@ -1,176 +1,131 @@
-# Parrot Auto-Runner
+# 🦜 Parrot Runner — an AI-built playable, and the AI system that builds it
 
-A forward-flying parrot collects fruit along a jungle path. Start, fly a fixed distance,
-end on a score card.
+[![CI](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml/badge.svg)](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml)
+[![Pages](https://github.com/dkauzi/parrot-runner/actions/workflows/pages.yml/badge.svg)](https://dkauzi.github.io/parrot-runner/)
+![tests](https://img.shields.io/badge/tests-11%20unit%20%2B%205%20e2e%20passing-3fb950)
+![assets](https://img.shields.io/badge/assets-AI%E2%80%91generated%20%2B%20verified-a371f7)
 
-see it in action here url: https://dkauzi.github.io/parrot-runner/   
-<img width="340" height="191" alt="download" src="https://github.com/user-attachments/assets/e4195397-6f5f-4cf8-beb8-06805c5ee86a" />
+A forward-flying parrot collecting fruit through a jungle — **built as a playable ad** — plus the
+**agentic AI pipeline that generates and quality-controls its art**. The game is the artefact; the
+pipeline is the point.
 
+▶️ **Play it:** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 📊 **Dashboard:** https://dkauzi.github.io/parrot-runner/dashboard.html
 
+![Gameplay](pipeline/agentic/game.gif)
 
-Built on `winstonrc/threejs-typescript-template` (webpack + TypeScript + Three.js).
+---
 
-## Run it
+## 🟢 For everyone (non-technical)
 
-```bash
-npm install            # once
+An AI **draws** each game asset (parrot, fruit, trees, jungle). Before any asset is used, automatic
+checks and a second AI **grade** it; anything wrong is **regenerated**; anything uncertain goes to a
+**human**. Every step is logged and shown on a live **dashboard** so anyone can see *what was made,
+whether it's good, what it cost, and what needs attention* — no code required.
 
-npm start              # dev server with live reload -> http://localhost:9000
+```
+  PROMPT ─▶ 🎨 GENERATE ─▶ 🟢 VALIDATE ─▶ 🔵 JUDGE ─▶ 🔁 RETRY ─▶ 🙋 ESCALATE
+           (an AI makes it)  (hard rules)  (an AI grades)  (fix & re-try)  (human decides)
 ```
 
-Or build and open the single self-contained playable:
+| What | Plain meaning |
+|---|---|
+| 🎨 **Generate** | An AI image model paints the asset from a saved prompt. |
+| 🟢 **Validate** | Code checks the basics (right format, transparent, right size). *Always runs.* |
+| 🔵 **Judge** | A second AI scores it like a game designer (reads at speed? pops? on-theme?). |
+| 🔁 **Retry** | If the score is low, the AI's feedback rewrites the prompt and tries again. |
+| 🙋 **Escalate** | If it still can't pass, a human is asked — the AI never guesses. |
 
-```bash
-npm run build:playable # -> dist/index.html (one file, ~0.48 MB)
-open dist/index.html    # runs straight from file://, no server needed
+---
+
+## 🔵 For engineers
+
+```
+src/                     the game (TypeScript + three.js, single-file playable ad)
+pipeline/agentic/        the AI system
+  run.mjs                orchestrator: generate → validate → grade → judge → retry → escalate
+  generate.mjs           image provider adapter (Pollinations free / mock) + adaptive chroma-key
+  judge.mjs              LLM judge adapter (Gemini / Claude, raw fetch, structured output)
+  grade-deterministic.mjs  ALWAYS-ON deterministic grader (transparency / coverage / centering)
+  rubric.mjs             one source of truth for the grading criteria
+  agents.config.json     versioned config-as-data (providers, models, thresholds, prompt versions)
+  eval.mjs               golden eval — guards the JUDGE against drift
+  visual-eval.mjs        plays the built game, screenshots it, AI + deterministic visual QA
+  visual-fix-loop.mjs    two-agent loop: judge the screenshot → regenerate → repeat
+  dashboard.mjs          self-contained observability dashboard
+pipeline/validate*.mjs   zero-dep asset gate + single-file build gate
+prompts/*.md             prompt-as-code (versioned, diffable, rolled back via git)
 ```
 
-Controls: arrow keys / WASD, or drag the on-screen joystick (touch). Try the variants with
-`?variant=rush` or `?variant=zen` on the URL.
-
-Verify everything:
-
+**Run everything:**
 ```bash
-npm run ci             # unit tests -> asset gate -> build -> build gate -> headless e2e
+npm install
+npm start                 # dev server → http://localhost:9000
+npm run ci                # 11 unit + asset gate + provenance + build + build-gate + 5 e2e
+npm run pipeline          # generate + grade assets (free, offline mock by default)
+node --env-file=.env pipeline/agentic/run.mjs --promote   # real AI art (Pollinations) + Gemini judge
+npm run pipeline:dashboard && open pipeline/agentic/dashboard.html
+npm run eval              # golden eval (judge drift)        ·  npm run eval:visual  (visual QA)
+npm run capture:gif       # animated gameplay GIF for the dashboard
 ```
 
-**On GitHub:** pushing to `main` runs the CI workflow (`.github/workflows/ci.yml`) and, once
- publishes the playable to
-`https://dkauzi.github.io/parrot-runner/`
+---
 
-## Why this build is shaped the way it is
+## 🟣 What's AI vs 🟢 what's deterministic code (the core decision rule)
 
+> AI for **judgment/creative**; code for **deterministic** work. Knowing where *not* to use AI is the point.
 
-- It is built like a **playable ad**, not a generic game (see `PRODUCTION_BUDGET.md`).
-- 
-- The asset workflow is a **reproducible generate -> validate -> grade pipeline**
-  (see `pipeline/`), a miniature of the variant-generate-and-grade systems the role exists
-  to build, kept deliberately small (no agent framework) because three assets do not justify
-  one. Knowing that boundary is the senior signal.
-  
-- The thinking is an artifact, not just a claim (see `DECISIONS.md`).
-
-
-
-- `AGENTIC.md` - the AI asset pipeline: generate -> validate -> judge -> retry -> escalate, + dashboard
-## The five stages (plain language)
-
-| Stage | What happens | Who/what |
+| Task | Handled by | Why |
 |---|---|---|
-| 1. Generate | Make a sprite image from the versioned prompt | image provider (AI) |
-| 2. Validate | Hard rules: real PNG, square, transparent, under size budget | deterministic code |
-| 3. Judge | Score 1–5 on 5 quality criteria (reads at scale, silhouette, on-theme, palette, transparency) | LLM judge (Claude) |
-| 4. Retry | If it scores low, send the judge's feedback back and try again | orchestrator |
-| 5. Escalate | If it still can't pass, flag for a **human** — the AI never guesses | human-in-the-loop |
+| Sprite & background **art** | 🟣 AI | creative, high-variability — taste matters |
+| Asset **quality grading** | 🟣 AI judge | subjective rubric — real judgment |
+| Collision, scoring, loop, **physics** | 🟢 code | must be exact, fast, identical every run |
+| **Validation** gates | 🟢 code | fail-loud rules, no LLM variance |
+| Background **acceptance** | 🟢 code | a backdrop that passes image checks is fine — don't over-apply AI |
 
+---
 
-- `ARCHITECTURE.md` - repeatable + swap-friendly seams (change a provider, not the system)
---- ## Repeatable
+## 🛡️ Key engineering decisions
 
---- **One command:** `npm run ci` runs the whole gate (unit -> asset gate -> build -> build gate ->
-  e2e). Same command locally, in Docker, and in CI. There is no "works on my machine" surface.
---- **Reproducible environment:** the `Dockerfile` pins the toolchain + browser, so the build and
-  tests produce the same result on any host.
---- **Deterministic core:** all decision logic (collision, scoring, combos, run-end) is pure and
-  unit-tested. Given the same inputs it always produces the same outputs, so a regression is a
-  failing test, not a vibe.
+1. **Deterministic judge always; AI is additive.** The AI grader handles taste, but a deterministic
+   grader runs first and is the **fallback** when the AI is rate-limited or unsure — the system
+   degrades to code, never to a guess. (This is what catches "the background isn't transparent.")
+2. **Fail-loud validation at every boundary.** Bad assets are rejected and surfaced immediately
+   (`validate.mjs`, `validate-build.mjs`, `grade-deterministic.mjs`), never flowed downstream.
+3. **Prompt-as-code + config-as-data.** Prompts are versioned markdown; agent behaviour lives in one
+   versioned `agents.config.json` (owner, last-audited, models, thresholds). Change = reviewable PR +
+   git-revertable rollback. The runtime is separate from the config.
+4. **Evaluate the evaluator.** A golden set of labelled assets regression-tests the *judge* itself, so
+   a silent model swap that moves the quality bar is caught (`npm run eval`).
+5. **Swappable adapters.** Image and judge providers are adapters — change a vendor/model in one place
+   (Claude > Gemini > offline mock), never a rewrite. Free by default (Pollinations + Gemini free tier).
+6. **Resilience.** Exponential backoff on 429/5xx; the pipeline never double-fires or hangs on a
+   provider outage — it falls back.
+7. **Observability everywhere.** Every stage is a logged span (trace id, outcome, latency). The
+   dashboard reads those logs — nothing on it is hand-written.
+8. **Right-sized restraint.** No agent framework for a few assets; no telemetry backend for a
+   take-home. Built the high-signal pieces; left clean seams for the rest.
 
-## Easy to change: the seams
+---
 
-Each concern is isolated behind a small interface, so you can replace one without touching the
-others. The swap points:
+## ✅ Quality gates (all green in CI)
 
-| Want to change... | Touch only... | Everything else is unaffected because... |
-|---|---|---|
-| Difficulty / theme / a new ad variant | `src/game/config.ts` | the engine reads a `GameConfig`; a variant is a data entry |
-| Placeholder art -> real AI sprites | `src/game/assets.ts` + `assets/assets.json` | the rest consumes a `Texture` + a manifest, not files |
-| Input device (add gamepad, tilt) | `src/input/Input.ts` | the game reads `getAxis()`, and never the device |
-| Scoring / combo rules | `src/game/Scoring.ts` | pure functions, unit-tested in isolation |
-| Hit detection | `src/game/Collision.ts` | pure functions, unit-tested in isolation |
-| Look of the HUD / end card | `src/ui/ui.ts` + `src/styles.css` | game logic emits events, DOM renders them |
-| Ad-network plumbing / CTA | `src/mraid.ts` | a single adapter wraps the SDK; the game calls `fireCta()` |
+| Gate | Proves |
+|---|---|
+| 🟢 unit tests | scoring & collision logic correct (11 tests) |
+| 🟢 asset gate | every sprite is a valid, transparent, in-budget PNG |
+| 🟣 provenance | each sprite is AI-generated (SHA-256 + generator), unaltered |
+| 🟢 build gate | the playable is one self-contained file, ≤5 MB, MRAID/CTA present |
+| 🔵 e2e (Playwright) | the built game loads, the loop runs, WebGL is healthy, CTA fires, + a gameplay screenshot |
+| 🔵🟢 visual QA | AI + deterministic check on a real gameplay screenshot (catches what functional tests can't) |
 
-`src/mraid.ts` is the clearest example of the adapter pattern from the brief: the network SDK can
-change, and only that one file changes. The game never imports the SDK directly.
+---
 
+## 🔭 What's not built yet (honest, and the next step)
 
-- `AUTOMATION.md` - single-file playable build, headless tests, Docker
+The dashboard measures **internal quality**, not **real-world ad performance** (CTR, install rate,
+playtime). Every asset is already a logged record, so feeding the ad network's performance webhook in
+flips the north-star from "rubric score" to "variant win-rate" — closing the loop from production back
+into generation. That's the data flywheel; this is its first half. The game already emits a
+`window.__telemetry` hook as the seed.
 
-  # Automation: single-file playable, auto-tested, containerised
-
-Three things, one chain: build a self-contained HTML playable, prove it works headlessly, run
-it all in a container so the result is reproducible. Each stage is a gate: it fails loud, it
-does not warn and continue. This is wired and passing; `npm run ci` is the single command.
-
-## 1. Make the HTML playable (single self-contained file)
-
-The template uses **webpack** (not Vite). The playable build inlines the JS bundle into one
-`index.html` via `html-inline-script-webpack-plugin`; CSS is inlined through `style-loader`;
-and placeholder sprites are drawn procedurally, so there are no external files to fetch. The
-build is self-contained by construction.
-
-```bash
-npm run build:playable     # webpack --env playable -> dist/index.html (one file)
-```
-
-Result: `dist/index.html`, ~0.48 MB, everything inlined. That single file is the playable.
-
-## 2. Auto-test it (headless)
-
-`tests/playable.spec.ts` (Playwright) drives the BUILT file in headless Chromium and asserts:
-
-- loads with zero console / page errors
-- the game loop advances (its own frame heartbeat grows -> not frozen)
-- the WebGL context is healthy and actually rendering
-- the CTA fires through `mraid.open` at game end (driven by the `?test=fastend` hook)
-
-```bash
-npx playwright install chromium
-npm run test:e2e
-```
-
-- `BUILD_PLAN.md` - core loop, file architecture, end card, tests, order of work
-- `PRODUCTION_BUDGET.md` - FPS, build size, load, dependency policy (the playable-ad contract)
-- `prompts/` - versioned asset-generation prompts (prompt as code)
-- `pipeline/agentic/` - the agentic generate/judge pipeline + observability dashboard
-
-    # AI Asset Pipeline
-
-A small, real **agentic system** that turns a written prompt into an approved game sprite,
-the way Seepia turns briefs into playable-ad variants at scale. It is the centrepiece of this
-project for a Senior **AI Systems** role: the game is the artefact, this is the system.
-
-## What it does, in one breath
-
-> **Generate → Validate → Judge → Retry → Escalate.** An AI makes the artwork, automatic rules
-> check it, a second AI grades it against a rubric, weak results are fed back and retried, and
-> anything that still can't pass is handed to a human. Every step is logged; a dashboard shows
-> the result.
-
-This mirrors the "Agent A drafts it, Agent B grades it, Agent A fixes it" pattern, kept at the
-right size: a few small files, no agent framework, runs offline for free.
-
-## The five stages (plain language)
-
-| Stage | What happens | Who/what |
-|---|---|---|
-| 1. Generate | Make a sprite image from the versioned prompt | image provider (AI) |
-| 2. Validate | Hard rules: real PNG, square, transparent, under size budget | deterministic code |
-| 3. Judge | Score 1–5 on 5 quality criteria (reads at scale, silhouette, on-theme, palette, transparency) | LLM judge (Claude) |
-| 4. Retry | If it scores low, send the judge's feedback back and try again | orchestrator |
-| 5. Escalate | If it still can't pass, flag for a **human** — the AI never guesses | human-in-the-loop |
-
-## Run it
-
-**Locally (no API key, fully free — uses offline mock providers):**
-```bash
-npm run pipeline             # generate + validate + judge all 3 sprites
-npm run pipeline:dashboard   # build dashboard.html, open it in a browser
-```
-Options: `node pipeline/agentic/run.mjs --asset fruit` (one asset), `--promote` (copy approved
-sprites into the game).
-
-- `pipeline/validate.mjs` / `validate-build.mjs` - deterministic asset + build gates (zero-dep)
-
-
-- `pipeline/grade.md` - the rubric the LLM judge scores against
+See `AGENTIC.md` (pipeline deep-dive), `ARCHITECTURE.md`, `REQUIREMENTS.md` (assignment compliance).

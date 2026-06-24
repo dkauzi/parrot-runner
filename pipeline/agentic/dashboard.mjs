@@ -259,6 +259,19 @@ const gateRows = GATES.map(
     `<tr><td><b>${n}</b></td><td>${plain}</td><td class="mono">${tech}</td><td><span class="${status.startsWith('live') ? 'ok' : 'tag'}">${status}</span></td></tr>`
 ).join('');
 
+// ---- Operational insights: what caused the most rework, across ALL runs ----
+const allJudge = attempts.filter((a) => a.stage === 'judge');
+const causeCounts = {
+  'Generation errors (provider/network)': attempts.filter((a) => a.stage === 'generate' && a.error).length,
+  'Validation rejects (caught early)': attempts.filter((a) => a.stage === 'validate' && a.valid === false).length,
+  'Judge rejects → regenerated': allJudge.filter((a) => a.accepted === false && !a.humanReview).length,
+  'Human escalations': attempts.filter((a) => a.humanReview).length,
+};
+const topCause = Object.entries(causeCounts).sort((a, b) => b[1] - a[1])[0];
+const insightRows = Object.entries(causeCounts)
+  .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+  .join('');
+
 // ---- Full run trace (observability): every stage is a logged span with outcome + latency ----
 const trace = attempts.filter((a) => a.runId === latestId).sort((a, b) => (a.ts < b.ts ? -1 : 1));
 const traceRows = trace
@@ -462,6 +475,14 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      ? `<h2>Run trace &mdash; the full decision log</h2>
  <div class="sub" style="margin-bottom:10px">Structured trace of the latest run (trace id <code>${latestId || '—'}</code>). Every stage is a logged span with a timestamp, outcome, and latency &mdash; the observability layer the rest of this page reads. Nothing here is hand-written.</div>
  <table><thead><tr><th>Time</th><th>Stage</th><th>Asset</th><th>Try</th><th>Outcome</th><th>Latency</th></tr></thead><tbody>${traceRows}</tbody></table>`
+     : ''
+ }
+
+ ${
+   topCause
+     ? `<h2>Operational insights &mdash; what caused the most rework</h2>
+ <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> &mdash; where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped &mdash; fail loud, not silent.)</div>
+ <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>`
      : ''
  }
 
