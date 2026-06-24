@@ -24,6 +24,7 @@ import { Input } from '../input/Input';
 import { UI } from '../ui/ui';
 import { blip, endChime, startChime, unlockAudio } from './audio';
 import { ensureMraid, fireCta } from '../mraid';
+import bgUrl from '../../assets/background.jpg'; // AI-generated jungle backdrop
 
 type State = 'menu' | 'playing' | 'gameover';
 
@@ -66,6 +67,11 @@ export class Game {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // protect FPS on retina
     this.renderer.setClearColor(0x000000, 0);
     root.appendChild(this.renderer.domElement);
+
+    // AI-generated jungle backdrop behind the transparent WebGL canvas (matches the concept art).
+    root.style.backgroundImage = `url(${bgUrl})`;
+    root.style.backgroundSize = 'cover';
+    root.style.backgroundPosition = 'center';
 
     this.scene.background = null;
     this.scene.fog = new Fog(FOG_COLOR, 12, 42);

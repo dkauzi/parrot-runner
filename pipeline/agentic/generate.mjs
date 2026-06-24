@@ -63,6 +63,11 @@ export async function mockGenerate(asset, prompt, attempt) {
  * key", like a weather-presenter green screen). The result is a transparent sprite — for free.
  */
 export async function pollinationsGenerate(asset, prompt, attempt) {
+  // "scene" assets (the jungle background) are full opaque images — no chroma-key, landscape,
+  // saved as compact JPEG. This is the AI-vs-deterministic split in action: the BACKGROUND is a
+  // creative/judgment task (great for AI), while the game logic stays plain code.
+  if (asset === 'background') return pollinationsScene(prompt, attempt);
+
   const full =
     `${prompt}\nA single ${asset}, centered, vivid saturated cartoon game sprite, bold clean ` +
     `outline, flat shading, die-cut sticker, no scenery, no text, no shadow, on a perfectly ` +
@@ -100,6 +105,24 @@ export async function pollinationsGenerate(asset, prompt, attempt) {
   const buffer = await img.getBuffer('image/png');
   const after = await thumb(img.clone()); // "after": the finished, transparent sprite
   return { buffer, provider: 'pollinations', preview: { before, after } };
+}
+
+/** Generate a full opaque jungle BACKGROUND (no transparency), compact JPEG, landscape. */
+async function pollinationsScene(prompt, attempt) {
+  const full =
+    `${prompt}\nLush vibrant tropical jungle background, dense green foliage, big colorful ` +
+    `hibiscus flowers framing the edges, hanging vines, soft sunlight with depth, polished ` +
+    `mobile-game background art. No characters, no text, no UI.`;
+  const url =
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}` +
+    `?width=1024&height=576&nologo=true&model=flux&seed=${attempt}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`pollinations request failed: ${res.status}`);
+  const img = await Jimp.read(Buffer.from(await res.arrayBuffer()));
+  img.cover({ w: 1024, h: 576 }); // exact 16:9, fill
+  const preview = { before: await thumb(img.clone()), after: await thumb(img.clone()) };
+  const buffer = await img.getBuffer('image/jpeg', { quality: 72 }); // small opaque backdrop
+  return { buffer, provider: 'pollinations', preview };
 }
 
 /** A small data-URI PNG thumbnail for the dashboard's before/after view. */

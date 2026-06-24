@@ -46,6 +46,18 @@ export function encodePngRGBA(width, height, rgba) {
   ]);
 }
 
+/** Quality gate for a "scene" asset (the opaque jungle background): JPEG/PNG, under budget.
+ *  Backgrounds are full images, so the square/transparent sprite rules don't apply. */
+export function validateScene(buf) {
+  const fails = [];
+  if (buf.length > 350 * 1024) fails.push(`size ${(buf.length / 1024).toFixed(0)}KB over 350KB`);
+  if (buf.length < 4 * 1024) fails.push('suspiciously small / not a real image');
+  const isJpeg = buf[0] === 0xff && buf[1] === 0xd8;
+  const isPng = buf.subarray(0, 8).equals(SIG);
+  if (!isJpeg && !isPng) fails.push('not a JPEG or PNG');
+  return fails;
+}
+
 /** Quality gate on an in-memory PNG. Returns a list of problems (empty = passed). */
 export function validateBuffer(buf) {
   const fails = [];

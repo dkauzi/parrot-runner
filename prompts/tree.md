@@ -9,11 +9,15 @@ reads as scenery framing the flight lane.
 
 ## Prompt
 ```
-A lush tropical jungle tree, full body front view, tall slender trunk with a dense rounded
-canopy of vivid green leaves, a few hanging vines. Flat clean game-asset style, soft even
-lighting, slight depth shading on the canopy. Centered, full tree from base to top. Isolated
-on a fully transparent background. Crisp edges, sprite quality.
+A single stylized tropical tree with one big compact ROUNDED SOLID canopy and a short thick
+trunk. Bold clean silhouette that reads instantly at small size. NO hanging vines, no thin
+wispy branches, no scattered leaves. Vivid cartoon game-sprite style, thick clean outline,
+flat shading. Centered, full tree from base to top.
 ```
+
+> Rationale: the AI judge repeatedly scored the old "hanging vines / dense detail" tree 2/5 on
+> silhouette ("busy, broken silhouette that won't read at small size"). This prompt forces a
+> single solid bold shape — the closed-loop judge feedback driving the prompt, prompt-as-code.
 
 ## Negative / constraints
 ```

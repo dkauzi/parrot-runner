@@ -25,7 +25,7 @@ import { mkdirSync, writeFileSync, appendFileSync, readFileSync, copyFileSync } 
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { validateBuffer } from './png.mjs';
+import { validateBuffer, validateScene } from './png.mjs';
 import { getImageProvider } from './generate.mjs';
 import { getJudge } from './judge.mjs';
 import { scoreVerdict, MAX_SCORE } from './rubric.mjs';
@@ -99,6 +99,8 @@ async function run() {
 
   for (const asset of assets) {
     const prompt = readPrompt(asset);
+    // Asset kind drives processing: 'scene' = opaque background; 'sprite' = transparent cutout.
+    const kind = asset === 'background' ? 'scene' : 'sprite';
     let feedback = '';
     let accepted = false;
     let lastVerdict = null;
@@ -125,8 +127,8 @@ async function run() {
         continue;
       }
 
-      // STAGE 2: deterministic gate
-      const vfails = validateBuffer(buffer);
+      // STAGE 2: deterministic gate (kind-appropriate: scene vs sprite)
+      const vfails = kind === 'scene' ? validateScene(buffer) : validateBuffer(buffer);
       if (vfails.length) {
         logLine(logPath, {
           runId, asset, attempt, stage: 'validate', accepted: false,
@@ -134,6 +136,23 @@ async function run() {
         });
         feedback += `\nFix: ${vfails.join('; ')}.`;
         continue;
+      }
+
+      // The background (scene) is gated DETERMINISTICALLY — a backdrop that passes the image
+      // checks is fine; spending an LLM rubric on it would be over-applying AI. The gameplay
+      // sprites below get the full LLM judge because their quality is a real judgment call.
+      if (kind === 'scene') {
+        const outFile = join(config.outDir, `${asset}.jpg`);
+        writeFileSync(outFile, buffer);
+        previews[asset] = genPreview || { before: dataUri(buffer), after: dataUri(buffer) };
+        if (promote) copyFileSync(outFile, join(ROOT, 'assets', 'background.jpg'));
+        logLine(logPath, {
+          runId, asset, attempt, stage: 'judge', accepted: true, valid: true,
+          total: null, provider: 'deterministic', model: 'validateScene',
+          latencyMs: Date.now() - started,
+        });
+        accepted = true;
+        break;
       }
 
       // STAGE 3: LLM judge
@@ -169,11 +188,17 @@ async function run() {
       });
 
       if (pass) {
-        const outFile = join(config.outDir, `${asset}.png`);
+        const ext = kind === 'scene' ? 'jpg' : 'png';
+        const outFile = join(config.outDir, `${asset}.${ext}`);
         writeFileSync(outFile, buffer);
         previews[asset] = genPreview || { before: dataUri(buffer), after: dataUri(buffer) };
         if (promote) {
-          copyFileSync(outFile, join(config.gameSpritesDir, `${asset}.png`));
+          // Scene -> assets/background.jpg (the game backdrop); sprites -> assets/sprites/*.png.
+          const dest =
+            kind === 'scene'
+              ? join(ROOT, 'assets', `background.${ext}`)
+              : join(config.gameSpritesDir, `${asset}.png`);
+          copyFileSync(outFile, dest);
           // Record provenance so the AI origin of this sprite is later verifiable.
           provenance.push({
             asset,
@@ -216,9 +241,17 @@ async function run() {
     console.log(`Provenance recorded for ${provenance.length} asset(s) -> assets/provenance.json`);
   }
 
-  // Persist before/after thumbnails for the dashboard's processing view.
+  // Persist before/after thumbnails for the dashboard (merged, so single-asset runs don't wipe
+  // the others).
   if (Object.keys(previews).length) {
-    writeFileSync(join(config.outDir, 'previews.json'), JSON.stringify(previews));
+    const file = join(config.outDir, 'previews.json');
+    let existing = {};
+    try {
+      existing = JSON.parse(readFileSync(file, 'utf8'));
+    } catch {
+      /* first run */
+    }
+    writeFileSync(file, JSON.stringify({ ...existing, ...previews }));
   }
 
   // Persist a machine-readable summary the dashboard reads.

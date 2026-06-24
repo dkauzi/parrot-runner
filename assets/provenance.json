@@ -6,27 +6,27 @@
     "score": 23,
     "promptSha256": "3f2d2960e19c79d556c6c650f2a40d7ceea7308151b5145385d6c39a78db2a80",
     "imageSha256": "736a904d5638f59b79dce3596aef0e3b0c2447c1506b402a8ef5c6f8d4c0b759",
-    "runId": "2026-06-24T04-48-07-818Z",
-    "generatedAt": "2026-06-24T04:48:16.041Z"
+    "runId": "2026-06-24T05-32-03-543Z",
+    "generatedAt": "2026-06-24T05:32:11.372Z"
   },
   "fruit": {
     "asset": "fruit",
     "generator": "pollinations",
     "judge": "gemini:gemini-2.5-flash",
-    "score": 23,
+    "score": 22,
     "promptSha256": "749695dbb1ce7d5ae854d3b891b13ff2d14fbf58d2b92531daf4180b876c9628",
     "imageSha256": "e9600a2ff45a6f0e69698796bc3ef1b61836055a896a167297a761293230fdd0",
-    "runId": "2026-06-24T04-48-07-818Z",
-    "generatedAt": "2026-06-24T04:49:46.022Z"
+    "runId": "2026-06-24T05-32-03-543Z",
+    "generatedAt": "2026-06-24T05:32:29.419Z"
   },
   "tree": {
     "asset": "tree",
     "generator": "pollinations",
     "judge": "gemini:gemini-2.5-flash",
-    "score": 20,
-    "promptSha256": "1980b08e9a79f1ad00db33942c099ca0053dedf5110cb8e017e1cd96fe744af8",
-    "imageSha256": "fe87cebe875a70a6f89becb6242e57c6760e247a79769938096d100feb128455",
-    "runId": "2026-06-23T18-31-15-593Z",
-    "generatedAt": "2026-06-23T18:31:46.444Z"
+    "score": 21,
+    "promptSha256": "2560c209e127cc275249fef4338c2707c6f74b9ab33a40c1ca58453f23afe784",
+    "imageSha256": "91a99958a0386b9e1e61355197be8911d7f265ea741ed15dd0c2fe8da3c81209",
+    "runId": "2026-06-24T05-32-03-543Z",
+    "generatedAt": "2026-06-24T05:33:39.159Z"
   }
 }
