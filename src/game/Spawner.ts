@@ -13,6 +13,8 @@ const RECYCLE_Z = 8; // behind the camera -> recycle
 const POP_TIME = 0.22;
 const FRUIT_POOL = 28;
 const TREE_POOL = 18;
+const FLOOR_Y = -0.4; // matches the scrolling ground plane in Game.ts (trees stand on it)
+const TREE_X = 4.2; // consistent roadside distance — trees line the route like freeway lamp posts
 
 interface Item {
   sprite: Sprite;
@@ -91,7 +93,8 @@ export class Spawner {
       this.spawnFruit();
     }
     this.sinceTree += move;
-    if (this.sinceTree >= jitter(this.config.treeGap)) {
+    if (this.sinceTree >= this.config.treeGap) {
+      // Even spacing (no jitter) so trees pass at a steady rhythm, like roadside lamp posts.
       this.sinceTree = 0;
       this.spawnTree();
     }
@@ -125,9 +128,12 @@ export class Spawner {
   private spawnTree(): void {
     const it = this.trees.find((t) => !t.sprite.visible);
     if (!it) return;
-    const x = this.treeSide * rand(3.4, 5.2);
+    // Lined along the route at a consistent roadside distance, alternating sides (lamp-post rows).
+    const x = this.treeSide * (TREE_X + rand(-0.3, 0.5));
     this.treeSide *= -1;
-    it.sprite.position.set(x, 1.4, SPAWN_Z);
+    // Grounded: the base of the tree sits on the scrolling floor, so it reads as a fixed prop.
+    const y = FLOOR_Y + it.baseScaleY / 2;
+    it.sprite.position.set(x, y, SPAWN_Z);
     it.sprite.visible = true;
   }
 
