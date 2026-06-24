@@ -1,9 +1,6 @@
 # 🦜 Parrot Runner — a playable and AI platform system that builds it, 
-# Tests it with Golden se,ts multi Agent agent verification  and validates it before publishing:  **
- ** later: collects and measure real-world ad performance for impovemnt. compares to rubric score" to "variant win-rate"  **
- # — closing the loop from production back into generation. **
- # Deterministic code gates. **
-# with Human in the loop for decisions No guessing what is not Known.:  **
+# Tests it with Golden se,ts multi Agent agent verification  and validates it before publishing: later: collects and measure real-world ad performance for impovemnt. compares to rubric score" to "variant win-rate"  ** closing the loop from production back into generation. **
+# Deterministic code gates.  with Human in the loop for decisions No guessing what is not Known.:  **
 # The data flywheel **
 
 [![CI](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml/badge.svg)](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml)
