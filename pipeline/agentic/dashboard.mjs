@@ -103,6 +103,12 @@ try {
 } catch {
   /* not run */
 }
+let device = null;
+try {
+  device = JSON.parse(readFileSync(join(HERE, 'out', 'device-check.json'), 'utf8'));
+} catch {
+  /* not run */
+}
 try {
   screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
 } catch {
@@ -566,6 +572,26 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
    <tr><td>🔵 e2e (built game)</td><td><b>${tests.e2e.passed}/${tests.e2e.total}</b> ${tests.e2e.passed === tests.e2e.total ? '✅' : '❌'}</td><td class="sub">${tests.e2e.cases.map((c) => c.name).join(' · ') || '-'}</td></tr>
    ${tests.regression ? `<tr><td>🟣 Regression (judge drift)</td><td><b>${tests.regression.passed ?? '-'}/${tests.regression.total ?? '-'}</b></td><td class="sub">${tests.regression.summary}</td></tr>` : ''}
  </tbody></table>`
+     : ''
+ }
+
+ ${
+   device
+     ? `<h2>📱 Device-size QA (playable renders on every placement)</h2>
+ <div class="sub" style="margin-bottom:10px">A playable ad must fit whatever placement it lands in. Each viewport is loaded and checked: canvas fills the screen (no letterbox/stretch), start button reachable, perspective aspect matches, no overflow. <b>${device.passed}/${device.total} viewports pass.</b></div>
+ <table><thead><tr><th>Device</th><th>Size</th><th>Canvas fills</th><th>Start reachable</th><th>No overflow</th><th>Result</th></tr></thead><tbody>
+   ${device.devices
+     .map(
+       (r) =>
+         `<tr><td>${r.label}</td><td class="sub">${r.w}×${r.h}</td><td>${r.canvasFills ? '✅' : '❌'}</td><td>${r.startVisible ? '✅' : '❌'}</td><td>${r.noOverflow ? '✅' : '❌'}</td><td>${r.ok ? '✅' : '❌'}</td></tr>`
+     )
+     .join('')}
+ </tbody></table>
+ ${
+   device.shots && (device.shots.portrait || device.shots.landscape)
+     ? `<div class="qa" style="margin-top:12px">${device.shots.portrait ? `<div class="shot"><img src="data:image/png;base64,${device.shots.portrait}" style="max-width:170px"/><div class="cap">portrait</div></div>` : ''}${device.shots.landscape ? `<div class="shot"><img src="data:image/png;base64,${device.shots.landscape}" style="max-width:320px"/><div class="cap">landscape</div></div>` : ''}</div>`
+     : ''
+ }`
      : ''
  }
 

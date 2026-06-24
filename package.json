@@ -20,13 +20,14 @@
     "eval:visual:loop": "node pipeline/agentic/visual-fix-loop.mjs",
     "capture:gif": "node pipeline/agentic/capture-gif.mjs",
     "build:pages": "npm run build:playable && cp pipeline/agentic/dashboard.html dist/dashboard.html",
-    "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e",
+    "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e && npm run validate:devices",
     "shadow": "node pipeline/agentic/shadow.mjs",
     "seamless": "node pipeline/agentic/make-seamless.mjs",
     "telemetry": "node pipeline/agentic/collect-telemetry.mjs",
     "tests:report": "node pipeline/agentic/generate-tests-report.mjs",
-    "dashboard:refresh": "npm run build:playable && (IMAGE_PROVIDER=pollinations npm run pipeline || true) && npm run test:e2e && node pipeline/agentic/generate-tests-report.mjs && node pipeline/agentic/simulate-webhook.mjs && node pipeline/agentic/collect-telemetry.mjs --source webhook && node pipeline/agentic/shadow.mjs --asset fruit --n 3 && node pipeline/agentic/visual-eval.mjs; node pipeline/agentic/capture-gif.mjs && node pipeline/agentic/dashboard.mjs",
-    "simulate:webhook": "node pipeline/agentic/simulate-webhook.mjs"
+    "dashboard:refresh": "npm run build:playable && (IMAGE_PROVIDER=pollinations npm run pipeline || true) && npm run test:e2e && node pipeline/agentic/generate-tests-report.mjs && node pipeline/agentic/simulate-webhook.mjs && node pipeline/agentic/collect-telemetry.mjs --source webhook && node pipeline/agentic/shadow.mjs --asset fruit --n 3 && node pipeline/agentic/visual-eval.mjs; node pipeline/agentic/device-check.mjs; node pipeline/agentic/capture-gif.mjs && node pipeline/agentic/dashboard.mjs",
+    "simulate:webhook": "node pipeline/agentic/simulate-webhook.mjs",
+    "validate:devices": "node pipeline/agentic/device-check.mjs"
   },
   "dependencies": {
     "gifenc": "^1.0.3",
