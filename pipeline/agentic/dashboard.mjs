@@ -109,6 +109,12 @@ try {
 } catch {
   /* not run */
 }
+let calibration = null;
+try {
+  calibration = JSON.parse(readFileSync(join(HERE, 'out', 'calibration.json'), 'utf8'));
+} catch {
+  /* not run */
+}
 try {
   screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
 } catch {
@@ -572,6 +578,17 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
    <tr><td>🔵 e2e (built game)</td><td><b>${tests.e2e.passed}/${tests.e2e.total}</b> ${tests.e2e.passed === tests.e2e.total ? '✅' : '❌'}</td><td class="sub">${tests.e2e.cases.map((c) => c.name).join(' · ') || '-'}</td></tr>
    ${tests.regression ? `<tr><td>🟣 Regression (judge drift)</td><td><b>${tests.regression.passed ?? '-'}/${tests.regression.total ?? '-'}</b></td><td class="sub">${tests.regression.summary}</td></tr>` : ''}
  </tbody></table>`
+     : ''
+ }
+
+ ${
+   calibration
+     ? `<h2>🎯 Judge calibration (is the grader actually right?)</h2>
+ <div class="sub" style="margin-bottom:10px">"The judge is good" is proven, not asserted: the grader is run over a labeled set (real sprites that must pass + deliberately broken ones that must be rejected) and scored on agreement with the labels. Below ${calibration.threshold}% fails CI. Judge: ${calibration.judge}.</div>
+ <table><thead><tr><th>Case</th><th>Labelled</th><th>Judged</th><th>Agree</th></tr></thead><tbody>
+   ${calibration.cases.map((c) => `<tr><td>${c.name}</td><td>${c.label}</td><td>${c.verdict}</td><td>${c.agree ? '✅' : '❌'}</td></tr>`).join('')}
+ </tbody></table>
+ <div class="sub" style="margin-top:8px"><b>${calibration.agreementPct}% agreement</b> (${calibration.agreed}/${calibration.total}), gate &ge; ${calibration.threshold}%.</div>`
      : ''
  }
 
