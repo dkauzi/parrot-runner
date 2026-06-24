@@ -20,6 +20,8 @@ interface Item {
   baseScaleY: number;
   collected: boolean;
   popT: number;
+  phase: number; // per-item offset so they don't bob in lockstep
+  baseY: number; // resting height, around which the fruit bobs
 }
 
 export class Spawner {
@@ -28,6 +30,7 @@ export class Spawner {
   private sinceFruit = 0;
   private sinceTree = 0;
   private treeSide = 1;
+  private time = 0;
 
   constructor(
     private scene: Scene,
@@ -49,12 +52,13 @@ export class Spawner {
     sprite.scale.set(sx, sy, 1);
     sprite.visible = false;
     this.scene.add(sprite);
-    return { sprite, baseScaleX: sx, baseScaleY: sy, collected: false, popT: 0 };
+    return { sprite, baseScaleX: sx, baseScaleY: sy, collected: false, popT: 0, phase: 0, baseY: 0 };
   }
 
   /** Advance the world one frame. */
   update(delta: number): void {
     const move = this.config.scrollSpeed * delta;
+    this.time += delta;
 
     for (const it of this.fruit) {
       if (!it.sprite.visible) continue;
@@ -68,6 +72,10 @@ export class Spawner {
         if (it.popT <= 0) this.retire(it);
       } else if (it.sprite.position.z > RECYCLE_Z) {
         this.retire(it);
+      } else {
+        // Alive: gentle bob around the resting height + a slow spin, so fruit feels collectible.
+        it.sprite.position.y = it.baseY + Math.sin(this.time * 2 + it.phase) * 0.12;
+        (it.sprite.material as SpriteMaterial).rotation += delta * 0.7;
       }
     }
     for (const it of this.trees) {
@@ -101,9 +109,13 @@ export class Spawner {
     if (!it) return;
     it.collected = false;
     it.popT = 0;
-    (it.sprite.material as SpriteMaterial).opacity = 1;
+    it.phase = Math.random() * Math.PI * 2;
+    it.baseY = rand(1.0, 3.4);
+    const mat = it.sprite.material as SpriteMaterial;
+    mat.opacity = 1;
+    mat.rotation = 0;
     it.sprite.scale.set(it.baseScaleX, it.baseScaleY, 1);
-    it.sprite.position.set(rand(-2.4, 2.4), rand(1.0, 3.4), SPAWN_Z);
+    it.sprite.position.set(rand(-2.4, 2.4), it.baseY, SPAWN_Z);
     it.sprite.visible = true;
   }
 

@@ -24,6 +24,7 @@
 import { mkdirSync, writeFileSync, appendFileSync, readFileSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { validateBuffer } from './png.mjs';
 import { getImageProvider } from './generate.mjs';
 import { getJudge } from './judge.mjs';
@@ -86,6 +87,10 @@ async function run() {
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const logPath = join(config.runsDir, `run-${runId}.jsonl`);
   const summary = [];
+  const provenance = []; // audit record proving each promoted sprite came from an AI generator
+  const previews = {}; // before/after thumbnails per asset for the dashboard
+  const sha = (data) => createHash('sha256').update(data).digest('hex');
+  const dataUri = (buf) => 'data:image/png;base64,' + buf.toString('base64');
 
   console.log(
     `Pipeline run ${runId}  |  image=${config.imageProvider}  judge=${config.judgeProvider}` +
@@ -105,9 +110,12 @@ async function run() {
       const started = Date.now();
 
       // STAGE 1: generate (network providers can fail transiently -> log and retry, don't crash)
-      let buffer;
+      let buffer, genProvider, genPreview;
       try {
-        ({ buffer } = await generate(asset, prompt + feedback, attempt));
+        const gen = await generate(asset, prompt + feedback, attempt);
+        buffer = gen.buffer;
+        genProvider = gen.provider;
+        genPreview = gen.preview;
       } catch (err) {
         logLine(logPath, {
           runId, asset, attempt, stage: 'generate', accepted: false,
@@ -163,8 +171,20 @@ async function run() {
       if (pass) {
         const outFile = join(config.outDir, `${asset}.png`);
         writeFileSync(outFile, buffer);
+        previews[asset] = genPreview || { before: dataUri(buffer), after: dataUri(buffer) };
         if (promote) {
           copyFileSync(outFile, join(config.gameSpritesDir, `${asset}.png`));
+          // Record provenance so the AI origin of this sprite is later verifiable.
+          provenance.push({
+            asset,
+            generator: genProvider, // the AI image provider (e.g. pollinations)
+            judge: `${result.provider}:${result.model}`,
+            score: scored.total,
+            promptSha256: sha(prompt),
+            imageSha256: sha(buffer),
+            runId,
+            generatedAt: new Date().toISOString(),
+          });
         }
         accepted = true;
         break;
@@ -180,6 +200,25 @@ async function run() {
       `  ${asset.padEnd(7)} ${status.padEnd(11)} ` +
         `${total ?? '-'}/${MAX_SCORE}  attempts=${attemptsUsed}  $${costUsd.toFixed(4)}`
     );
+  }
+
+  // Persist the provenance manifest (merged) so committed sprites stay verifiable.
+  if (promote && provenance.length) {
+    const file = join(ROOT, 'assets', 'provenance.json');
+    let existing = {};
+    try {
+      existing = JSON.parse(readFileSync(file, 'utf8'));
+    } catch {
+      /* first run */
+    }
+    for (const p of provenance) existing[p.asset] = p;
+    writeFileSync(file, JSON.stringify(existing, null, 2) + '\n');
+    console.log(`Provenance recorded for ${provenance.length} asset(s) -> assets/provenance.json`);
+  }
+
+  // Persist before/after thumbnails for the dashboard's processing view.
+  if (Object.keys(previews).length) {
+    writeFileSync(join(config.outDir, 'previews.json'), JSON.stringify(previews));
   }
 
   // Persist a machine-readable summary the dashboard reads.

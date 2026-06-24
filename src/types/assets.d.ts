@@ -4,6 +4,10 @@ declare module '*.png' {
   const src: string;
   export default src;
 }
+declare module '*.glb' {
+  const src: string;
+  export default src;
+}
 
 // webpack's require.context, used to discover real sprite PNGs at build time.
 interface WebpackRequireContext {

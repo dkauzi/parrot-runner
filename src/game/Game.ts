@@ -1,6 +1,15 @@
-import { Clock, Fog, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import {
+  Clock,
+  DirectionalLight,
+  Fog,
+  HemisphereLight,
+  PerspectiveCamera,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import { GameConfig } from './config';
-import { MANIFEST, makeFruitTexture, makeParrotTexture, makeTreeTexture } from './assets';
+import { MANIFEST, makeFruitTexture, makeTreeTexture } from './assets';
 import { Parrot } from './Parrot';
 import { Spawner } from './Spawner';
 import { collect } from './Collision';
@@ -53,7 +62,6 @@ export class Game {
     this.renderer = new WebGLRenderer({
       antialias: true,
       alpha: true,
-      preserveDrawingBuffer: true, // lets the headless test screenshot the canvas
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // protect FPS on retina
     this.renderer.setClearColor(0x000000, 0);
@@ -62,14 +70,20 @@ export class Game {
     this.scene.background = null;
     this.scene.fog = new Fog(FOG_COLOR, 12, 42);
 
+    // Lights so the 3D parrot model is lit (sprites are unlit and ignore these).
+    const hemi = new HemisphereLight(0xffffff, 0x4f7a3a, 1.1);
+    const sun = new DirectionalLight(0xffffff, 1.6);
+    sun.position.set(2, 5, 4);
+    this.scene.add(hemi, sun);
+
     this.camera = new PerspectiveCamera(55, 1, 0.1, 100);
     this.camera.position.set(0, 2.6, 8.5);
     this.camera.lookAt(0, 1.8, -6);
     this.camBase = this.camera.position.clone();
 
     const s = MANIFEST.sprites;
-    this.parrot = new Parrot(makeParrotTexture(), s.parrot);
-    this.scene.add(this.parrot.sprite);
+    this.parrot = new Parrot(s.parrot);
+    this.scene.add(this.parrot.object);
     this.spawner = new Spawner(
       this.scene,
       makeFruitTexture(config.fruitColor),
@@ -92,6 +106,10 @@ export class Game {
 
   start(): void {
     this.renderer.setAnimationLoop(() => this.tick());
+    // Test hook: let headless tests stop the loop so the WebGL context tears down cleanly
+    // (software-GL teardown can hang while a heavy render loop is still running).
+    (window as unknown as { __stopLoop: () => void }).__stopLoop = () =>
+      this.renderer.setAnimationLoop(null);
     // Auto-start under the fast-end test hook so the run reaches the end card unattended.
     if (this.fastEnd) this.begin();
   }

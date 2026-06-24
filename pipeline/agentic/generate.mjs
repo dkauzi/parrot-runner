@@ -64,24 +64,48 @@ export async function mockGenerate(asset, prompt, attempt) {
  */
 export async function pollinationsGenerate(asset, prompt, attempt) {
   const full =
-    `${prompt}\nA single ${asset}, centered, isolated on a solid flat magenta #FF00FF ` +
-    `background, no shadow, flat game-sprite style.`;
+    `${prompt}\nA single ${asset}, centered, vivid saturated cartoon game sprite, bold clean ` +
+    `outline, flat shading, die-cut sticker, no scenery, no text, no shadow, on a perfectly ` +
+    `flat solid magenta #FF00FF background.`;
   const url =
     `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}` +
-    `?width=512&height=512&nologo=true&model=flux&seed=${attempt}`;
+    `?width=768&height=768&nologo=true&model=flux&seed=${attempt}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`pollinations request failed: ${res.status}`);
   const img = await Jimp.read(Buffer.from(await res.arrayBuffer()));
 
-  // Chroma-key: turn magenta pixels transparent.
+  // "Before" thumbnail: the raw AI output, on its magenta background, prior to any processing.
+  const before = await thumb(img.clone());
+
+  // Soft chroma-key with edge despill: fully cut strong magenta, fade the fringe, and pull the
+  // purple tint out of edge pixels so there's no halo — much cleaner than a hard threshold.
   const d = img.bitmap.data;
   for (let i = 0; i < d.length; i += 4) {
-    if (d[i] > 180 && d[i + 1] < 90 && d[i + 2] > 150) d[i + 3] = 0;
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
+    const magenta = Math.min(r, b) - g; // > 0 when magenta dominates green
+    if (magenta > 80) {
+      d[i + 3] = 0; // clearly background
+    } else if (magenta > 25) {
+      const t = (magenta - 25) / 55; // 0..1 across the fringe
+      d[i + 3] = Math.round(d[i + 3] * (1 - t)); // fade out
+      d[i] = Math.round(r - (r - g) * t * 0.8); // despill red
+      d[i + 2] = Math.round(b - (b - g) * t * 0.8); // despill blue
+    }
   }
   img.autocrop(); // trim the now-transparent border
   img.contain({ w: SIZE, h: SIZE }); // square, keep aspect, transparent padding
-  return { buffer: await img.getBuffer('image/png'), provider: 'pollinations' };
+  const buffer = await img.getBuffer('image/png');
+  const after = await thumb(img.clone()); // "after": the finished, transparent sprite
+  return { buffer, provider: 'pollinations', preview: { before, after } };
+}
+
+/** A small data-URI PNG thumbnail for the dashboard's before/after view. */
+async function thumb(img) {
+  img.scaleToFit({ w: 110, h: 110 });
+  return 'data:image/png;base64,' + (await img.getBuffer('image/png')).toString('base64');
 }
 
 /**

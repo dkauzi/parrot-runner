@@ -33,6 +33,12 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test.afterEach(async ({ page }) => {
+  // Stop the render loop before the context tears down — software-GL teardown can hang while a
+  // heavy WebGL loop is still running. Best-effort; ignore if the page is already gone.
+  await page.evaluate(() => (window as { __stopLoop?: () => void }).__stopLoop?.()).catch(() => {});
+});
+
 test('loads with no console or page errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));

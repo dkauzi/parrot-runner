@@ -8,6 +8,7 @@
     "build": "webpack",
     "build:playable": "webpack --env playable",
     "validate:assets": "node pipeline/validate.mjs assets/sprites",
+    "verify:provenance": "node pipeline/verify-provenance.mjs",
     "validate:build": "node pipeline/validate-build.mjs dist",
     "test:unit": "node --import tsx --test tests/unit/collision.test.ts tests/unit/scoring.test.ts",
     "test:e2e": "playwright test",
@@ -15,7 +16,7 @@
     "pipeline:optimize": "node pipeline/agentic/optimize.mjs",
     "pipeline:dashboard": "node pipeline/agentic/dashboard.mjs",
     "build:pages": "npm run build:playable && npm run pipeline && npm run pipeline:dashboard && cp pipeline/agentic/dashboard.html dist/dashboard.html",
-    "ci": "npm run test:unit && npm run validate:assets && npm run build:playable && npm run validate:build && npm run test:e2e"
+    "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e"
   },
   "dependencies": {
     "jimp": "^1.6.1",
