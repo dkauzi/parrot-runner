@@ -99,8 +99,9 @@ async function run() {
 
   for (const asset of assets) {
     const prompt = readPrompt(asset);
-    // Asset kind drives processing: 'scene' = opaque background; 'sprite' = transparent cutout.
-    const kind = asset === 'background' ? 'scene' : 'sprite';
+    // Asset kind drives processing: 'scene' = opaque full image (background, ground texture);
+    // 'sprite' = transparent cutout.
+    const kind = asset === 'background' || asset === 'ground' ? 'scene' : 'sprite';
     let feedback = '';
     let accepted = false;
     let lastVerdict = null;
@@ -145,7 +146,7 @@ async function run() {
         const outFile = join(config.outDir, `${asset}.jpg`);
         writeFileSync(outFile, buffer);
         previews[asset] = genPreview || { before: dataUri(buffer), after: dataUri(buffer) };
-        if (promote) copyFileSync(outFile, join(ROOT, 'assets', 'background.jpg'));
+        if (promote) copyFileSync(outFile, join(ROOT, 'assets', `${asset}.jpg`));
         logLine(logPath, {
           runId, asset, attempt, stage: 'judge', accepted: true, valid: true,
           total: null, provider: 'deterministic', model: 'validateScene',

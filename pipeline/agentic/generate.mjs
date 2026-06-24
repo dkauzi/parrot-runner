@@ -107,12 +107,10 @@ export async function pollinationsGenerate(asset, prompt, attempt) {
   return { buffer, provider: 'pollinations', preview: { before, after } };
 }
 
-/** Generate a full opaque jungle BACKGROUND (no transparency), compact JPEG, landscape. */
+/** Generate a full opaque scene image (background / ground texture), compact JPEG, landscape.
+ *  Prompt-led so different scene assets (background vs ground) are driven by their prompt files. */
 async function pollinationsScene(prompt, attempt) {
-  const full =
-    `${prompt}\nLush vibrant tropical jungle background, dense green foliage, big colorful ` +
-    `hibiscus flowers framing the edges, hanging vines, soft sunlight with depth, polished ` +
-    `mobile-game background art. No characters, no text, no UI.`;
+  const full = `${prompt}\nPolished vivid mobile-game art, rich detail and depth, no characters, no text, no UI.`;
   const url =
     `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}` +
     `?width=1024&height=576&nologo=true&model=flux&seed=${attempt}`;

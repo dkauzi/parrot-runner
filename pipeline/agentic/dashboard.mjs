@@ -218,6 +218,30 @@ const gateRows = GATES.map(
     `<tr><td><b>${n}</b></td><td>${plain}</td><td class="mono">${tech}</td><td><span class="${status.startsWith('live') ? 'ok' : 'tag'}">${status}</span></td></tr>`
 ).join('');
 
+// ---- Full run trace (observability): every stage is a logged span with outcome + latency ----
+const trace = attempts.filter((a) => a.runId === latestId).sort((a, b) => (a.ts < b.ts ? -1 : 1));
+const traceRows = trace
+  .map((a) => {
+    const outcome =
+      a.stage === 'generate'
+        ? a.error
+          ? `error: ${esc(a.error)}`
+          : 'generated'
+        : a.stage === 'validate'
+          ? a.valid === false
+            ? `invalid: ${esc((a.problems || []).join(', '))}`
+            : 'valid'
+          : a.stage === 'judge'
+            ? a.humanReview
+              ? `escalated: ${esc(a.reason || '')}`
+              : a.accepted
+                ? `accepted ${a.total != null ? a.total + '/' + MAX_SCORE : '(scene)'}`
+                : `rejected ${a.total != null ? a.total + '/' + MAX_SCORE : ''}`
+            : '';
+    return `<tr><td class="mono">${(a.ts || '').slice(11, 19)}</td><td>${a.stage}</td><td>${a.asset}</td><td>${a.attempt}</td><td>${outcome}</td><td class="mono">${a.latencyMs != null ? a.latencyMs + 'ms' : ''}</td></tr>`;
+  })
+  .join('');
+
 // ---- What we use AI for, and what we deliberately keep as code (the core decision rule) ----
 const AI_VS_CODE = [
   ['Sprite &amp; background art', 'AI', 'Creative, high-variability — taste matters, many valid outputs'],
@@ -352,6 +376,14 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      ? `<h2>Provenance &mdash; proof of AI origin</h2>
  <div class="sub" style="margin-bottom:10px">Each sprite is fingerprinted (SHA-256) when the AI generates it. This re-checks the shipped file still matches &mdash; proving it came from the AI generator and was not swapped for hand-drawn or procedural art. Verification + observability.</div>
  <table><thead><tr><th>Asset</th><th>AI generator</th><th>Graded by</th><th>Score</th><th>SHA-256</th><th>Verified</th></tr></thead><tbody>${provRows}</tbody></table>`
+     : ''
+ }
+
+ ${
+   traceRows
+     ? `<h2>Run trace &mdash; the full decision log</h2>
+ <div class="sub" style="margin-bottom:10px">Structured trace of the latest run (trace id <code>${latestId || '—'}</code>). Every stage is a logged span with a timestamp, outcome, and latency &mdash; the observability layer the rest of this page reads. Nothing here is hand-written.</div>
+ <table><thead><tr><th>Time</th><th>Stage</th><th>Asset</th><th>Try</th><th>Outcome</th><th>Latency</th></tr></thead><tbody>${traceRows}</tbody></table>`
      : ''
  }
 
