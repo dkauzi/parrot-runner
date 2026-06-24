@@ -102,8 +102,7 @@ export class Game {
     // trees and fruit passing the camera (like fixed lamp posts on a freeway), not by the ground.
     const groundTex = new TextureLoader().load(groundUrl);
     groundTex.wrapS = groundTex.wrapT = RepeatWrapping;
-    groundTex.repeat.set(3, 20);
-    groundTex.offset.x = 0.5; // shift so no tile seam sits dead-centre in view
+    groundTex.repeat.set(4, 24); // texture is offset-blended seamless (make-seamless.mjs) -> no seams
     // Tint green (multiplies the texture) so any stray pink/purple in the AI floor reads as jungle.
     const ground = new Mesh(
       new PlaneGeometry(60, 240),
