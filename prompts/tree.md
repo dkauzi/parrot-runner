@@ -1,4 +1,4 @@
-# Asset: Tree (environment) — v0.1
+# Asset: Tree (environment) - v0.1
 
 Seen from the FRONT/side as a billboard scattered along the path. Full vertical tree so it
 reads as scenery framing the flight lane.
@@ -17,7 +17,7 @@ flat shading. Centered, full tree from base to top.
 
 > Rationale: the AI judge repeatedly scored the old "hanging vines / dense detail" tree 2/5 on
 > silhouette ("busy, broken silhouette that won't read at small size"). This prompt forces a
-> single solid bold shape — the closed-loop judge feedback driving the prompt, prompt-as-code.
+> single solid bold shape - the closed-loop judge feedback driving the prompt, prompt-as-code.
 
 ## Negative / constraints
 ```

@@ -3,7 +3,7 @@
  * Functional-test + regression report for the dashboard (tech AND non-tech readable).
  * Runs the unit suite (captures TAP), reads the Playwright e2e results, and reads the golden eval
  * (the JUDGE regression guard). Writes out/tests.json so the dashboard can list every CASE with a
- * pass/fail — proving the functional tests + regression are re-run after every code change.
+ * pass/fail - proving the functional tests + regression are re-run after every code change.
  *
  * Run:  node pipeline/agentic/generate-tests-report.mjs
  */

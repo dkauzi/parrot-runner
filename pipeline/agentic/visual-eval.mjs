@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Visual QA — play the built game, screenshot ACTUAL GAMEPLAY, and verify it two ways:
+ * Visual QA - play the built game, screenshot ACTUAL GAMEPLAY, and verify it two ways:
  *   1. DETERMINISTIC checks (always run): stray magenta/pink in the scene = leftover chroma-key.
  *   2. AI judge (strict game-designer): upside-down bird, texture seams, dirty cutouts, etc.
  * The AI is not trusted alone (it gave a buggy frame 5/5 once); the deterministic check is the
@@ -47,7 +47,7 @@ if (magentaPct > 1.5) detIssues.push(`stray magenta/pink in ${magentaPct.toFixed
 
 // ---- DETERMINISTIC camera/playability check: the play area must be visible, not all-ground ----
 // Sample a horizontal band across the vertical middle of the frame; if it's almost entirely the
-// green floor, the camera is pitched too far down (bad play view) — the bug we hit and fixed.
+// green floor, the camera is pitched too far down (bad play view) - the bug we hit and fixed.
 const W = img.bitmap.width;
 const H = img.bitmap.height;
 let floorish = 0;
@@ -61,7 +61,7 @@ for (let y = Math.floor(H * 0.45); y < Math.floor(H * 0.6); y++) {
 }
 const midFloorPct = band ? (floorish / band) * 100 : 0;
 if (midFloorPct > 85)
-  detIssues.push(`camera looks too far down — ${midFloorPct.toFixed(0)}% of mid-frame is floor, leaving little play view`);
+  detIssues.push(`camera looks too far down - ${midFloorPct.toFixed(0)}% of mid-frame is floor, leaving little play view`);
 
 // ---- AI judge (strict) ----
 const key = process.env.GEMINI_API_KEY;
@@ -91,14 +91,14 @@ if (key) {
     const json = await res.json();
     ai = { model, ...JSON.parse(json.candidates[0].content.parts[0].text) };
   } catch {
-    // AI judge is a failure point — when it's down, do NOT fail; the deterministic gate decides.
-    ai = { issues: [], score: null, summary: `AI judge unavailable (HTTP ${res.status}) — deterministic checks used`, unavailable: true };
+    // AI judge is a failure point - when it's down, do NOT fail; the deterministic gate decides.
+    ai = { issues: [], score: null, summary: `AI judge unavailable (HTTP ${res.status}) - deterministic checks used`, unavailable: true };
   }
 }
 
 const issues = [...detIssues, ...(ai.issues || [])];
 const verdict = {
-  ok: issues.length === 0, // deterministic OR AI issue fails it — code is the floor, AI adds taste
+  ok: issues.length === 0, // deterministic OR AI issue fails it - code is the floor, AI adds taste
   score: ai.score,
   issues,
   summary: ai.summary,

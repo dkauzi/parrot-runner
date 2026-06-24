@@ -4,7 +4,7 @@
  * Plain-language: this file does two jobs.
  *   1. `encodePngRGBA` turns raw pixels into a real .png file in memory. The mock image
  *      "generator" uses it so the pipeline produces genuine, valid sprites with no internet,
- *      no API key, and no extra libraries — so anyone can run the whole thing for free.
+ *      no API key, and no extra libraries - so anyone can run the whole thing for free.
  *   2. `validateBuffer` is the automatic quality gate: before a sprite is allowed through, it
  *      checks the file is a real PNG, is square, has transparency, and is under the size budget.
  *      Same rules as pipeline/validate.mjs, but checked on the in-memory image before it's saved.

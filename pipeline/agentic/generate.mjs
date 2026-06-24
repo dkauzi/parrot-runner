@@ -3,7 +3,7 @@
  *
  * Plain-language: this is the part that creates the artwork. It is built as a swappable adapter
  * so the rest of the pipeline never cares HOW the image was made:
- *   - `mockGenerate` (default) draws a real, valid sprite locally — no API key, no internet, free.
+ *   - `mockGenerate` (default) draws a real, valid sprite locally - no API key, no internet, free.
  *     It lets the whole pipeline run end-to-end for anyone, today.
  *   - A real provider (e.g. an image model API) drops in here later behind the same function
  *     signature; nothing downstream changes. That is the "swap a provider, not the system" design.
@@ -55,15 +55,15 @@ export async function mockGenerate(asset, prompt, attempt) {
 }
 
 /**
- * FREE real image generation via Pollinations.ai — no API key, no cost.
+ * FREE real image generation via Pollinations.ai - no API key, no cost.
  *
  * Plain-language: this asks a free online image AI for the artwork. Sprites need a transparent
  * background, and free image models don't produce transparency, so we use an old trick: ask for
  * the subject on a solid magenta background, then delete every magenta pixel here (a "chroma
- * key", like a weather-presenter green screen). The result is a transparent sprite — for free.
+ * key", like a weather-presenter green screen). The result is a transparent sprite - for free.
  */
 export async function pollinationsGenerate(asset, prompt, attempt) {
-  // "scene" assets (the jungle background) are full opaque images — no chroma-key, landscape,
+  // "scene" assets (the jungle background) are full opaque images - no chroma-key, landscape,
   // saved as compact JPEG. This is the AI-vs-deterministic split in action: the BACKGROUND is a
   // creative/judgment task (great for AI), while the game logic stays plain code.
   if (asset === 'background') return pollinationsScene(prompt, attempt);
@@ -85,7 +85,7 @@ export async function pollinationsGenerate(asset, prompt, attempt) {
 
   // ADAPTIVE chroma-key: sample the 4 corners to learn the ACTUAL background colour the image
   // model produced (it rarely hits pure #FF00FF), then key out everything close to it. This is far
-  // more robust than a fixed magenta threshold — it handles pink/magenta/white/grey backgrounds.
+  // more robust than a fixed magenta threshold - it handles pink/magenta/white/grey backgrounds.
   const d = img.bitmap.data;
   const W = img.bitmap.width;
   const H = img.bitmap.height;
@@ -140,7 +140,7 @@ async function thumb(img) {
 
 /**
  * Adapter selector. 'mock' (offline, free) and 'pollinations' (free, real AI, needs internet).
- * A paid image API drops in the same way — provider selection is a config/env change, not a
+ * A paid image API drops in the same way - provider selection is a config/env change, not a
  * rewrite. Set IMAGE_PROVIDER=pollinations to generate real art.
  */
 export function getImageProvider(name) {

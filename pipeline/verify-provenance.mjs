@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Provenance verification gate — proves each shipped sprite is genuinely AI-generated.
+ * Provenance verification gate - proves each shipped sprite is genuinely AI-generated.
  *
  * Plain-language: the other gates check a sprite is a valid, good-looking image. This one answers
  * a different question: "where did it come from?" When the pipeline generates a sprite it records,
  * in assets/provenance.json, which AI generator made it, the prompt's fingerprint, which AI graded
  * it, and the image's SHA-256 (a unique fingerprint of the exact bytes). This gate re-fingerprints
- * every committed sprite and checks it matches — so a hand-drawn or procedural placeholder swapped
+ * every committed sprite and checks it matches - so a hand-drawn or procedural placeholder swapped
  * in later would FAIL. It is an auditable chain of custody from prompt to shipped pixel.
  *
  * Honest scope: this proves the sprite came from THIS pipeline's AI generator and hasn't been
@@ -50,7 +50,7 @@ for (const f of pngs) {
     problems.push('no provenance record (origin unknown)');
   } else {
     if (sha(readFileSync(join(SPRITES, f))) !== rec.imageSha256) {
-      problems.push('SHA-256 mismatch — file changed since generation');
+      problems.push('SHA-256 mismatch - file changed since generation');
     }
     if (!AI_GENERATORS.has(rec.generator)) {
       problems.push(`generator "${rec.generator}" is not an AI image generator`);

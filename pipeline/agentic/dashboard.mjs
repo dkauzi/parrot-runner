@@ -158,7 +158,7 @@ const provRows = provList
   )
   .join('');
 
-// Judge attempts for the latest run, grouped by asset and ordered — this is the decision trail.
+// Judge attempts for the latest run, grouped by asset and ordered - this is the decision trail.
 const latestJudge = attempts.filter((a) => a.runId === latestId && a.stage === 'judge');
 const loopByAsset = {};
 for (const a of [...latestJudge].sort((x, y) => x.attempt - y.attempt)) {
@@ -183,9 +183,9 @@ const card = (label, value, hint = '') =>
 // ---- Brief requirements ----
 const REQUIREMENTS = [
   ['Functional core loop', 'start → fly &amp; collect → end with score', 'start screen, scrolling collision-scoring flight, end card with final score'],
-  ['Controllable parrot', 'virtual joystick OR keyboard', 'both — keyboard (arrows / WASD) + on-screen joystick'],
-  ['AI-generated collectible (scores points)', 'at least 1', 'fruit.png — AI-generated, judged &amp; accepted, +points on pickup'],
-  ['AI-generated tree (environment)', 'at least 1', 'tree.png — AI-generated, judged &amp; accepted, scattered along the path'],
+  ['Controllable parrot', 'virtual joystick OR keyboard', 'both - keyboard (arrows / WASD) + on-screen joystick'],
+  ['AI-generated collectible (scores points)', 'at least 1', 'fruit.png - AI-generated, judged &amp; accepted, +points on pickup'],
+  ['AI-generated tree (environment)', 'at least 1', 'tree.png - AI-generated, judged &amp; accepted, scattered along the path'],
 ];
 const reqRows = REQUIREMENTS.map(
   ([r, need, ev]) => `<tr><td><b>${r}</b></td><td><span class="ok">met ✓</span></td><td>${need}</td><td class="mono">${ev}</td></tr>`
@@ -226,7 +226,7 @@ const assetRows = (latest?.summary || [])
 const loopCards = Object.keys(loopByAsset)
   .map((asset) => {
     const steps = loopByAsset[asset];
-    const headline = steps.length > 1 ? `${steps.length} loops — rejected, then re-generated` : 'accepted first pass';
+    const headline = steps.length > 1 ? `${steps.length} loops - rejected, then re-generated` : 'accepted first pass';
     const items = steps
       .map((a) => {
         const reason = (a.scores && a.scores.reasoning) || a.reason || '';
@@ -242,7 +242,7 @@ const loopCards = Object.keys(loopByAsset)
         );
       })
       .join('');
-    return `<div class="loop"><div class="lt">${asset} <span class="muted">&mdash; ${headline}</span></div><ol>${items}</ol></div>`;
+    return `<div class="loop"><div class="lt">${asset} <span class="muted">- ${headline}</span></div><ol>${items}</ol></div>`;
   })
   .join('');
 
@@ -262,14 +262,14 @@ const previewCards = Object.keys(previews)
 
 // ---- Validation gates (no provenance) ----
 const GATES = [
-  ['Asset gate', 'Every sprite is a real, transparent, square image small enough to ship', 'png.mjs / validate.mjs — PNG signature, alpha channel, width=height, ≤150KB', 'wired'],
+  ['Asset gate', 'Every sprite is a real, transparent, square image small enough to ship', 'png.mjs / validate.mjs - PNG signature, alpha channel, width=height, ≤150KB', 'wired'],
   ['Manifest schema', 'The asset list is well-formed before the game reads it', 'assets.schema.json + validateManifest()', 'wired'],
-  ['Build gate', 'The finished playable is one self-contained file under the ad size limit', 'validate-build.mjs — single HTML, ≤5MB, no external URLs, MRAID + CTA', 'wired'],
-  ['Unit tests', 'The scoring and collision rules are proven correct', 'node --test via tsx — pure functions', 'wired'],
-  ['End-to-end test', 'The built game loads and runs in a real browser', 'Playwright headless — no errors, loop advances, WebGL healthy, CTA fires', 'wired'],
-  ['Judge rubric', 'An AI scores each sprite on 5 quality criteria', `LLM vision judge — structured 1-5 per criterion`, `live: ${provider}`],
-  ['AI provenance', 'Proof each sprite was made by an AI generator, not hand-drawn or procedural', 'verify-provenance.mjs — each sprite’s SHA-256 matches its recorded generation fingerprint', provVerified ? `live: ${provList.length} verified` : 'wired'],
-  ['Human escalation', 'Anything the AI is unsure about goes to a person', 'HITL — malformed / refused / rate-limited verdict flags humanReview', hitl ? `live: ${hitl} flagged` : 'wired'],
+  ['Build gate', 'The finished playable is one self-contained file under the ad size limit', 'validate-build.mjs - single HTML, ≤5MB, no external URLs, MRAID + CTA', 'wired'],
+  ['Unit tests', 'The scoring and collision rules are proven correct', 'node --test via tsx - pure functions', 'wired'],
+  ['End-to-end test', 'The built game loads and runs in a real browser', 'Playwright headless - no errors, loop advances, WebGL healthy, CTA fires', 'wired'],
+  ['Judge rubric', 'An AI scores each sprite on 5 quality criteria', `LLM vision judge - structured 1-5 per criterion`, `live: ${provider}`],
+  ['AI provenance', 'Proof each sprite was made by an AI generator, not hand-drawn or procedural', 'verify-provenance.mjs - each sprite’s SHA-256 matches its recorded generation fingerprint', provVerified ? `live: ${provList.length} verified` : 'wired'],
+  ['Human escalation', 'Anything the AI is unsure about goes to a person', 'HITL - malformed / refused / rate-limited verdict flags humanReview', hitl ? `live: ${hitl} flagged` : 'wired'],
   ['CI gate', 'All of the above run automatically on every code change', 'npm run ci on GitHub Actions', 'wired'],
 ];
 const gateRows = GATES.map(
@@ -322,11 +322,11 @@ const traceRows = trace
 
 // ---- What we use AI for, and what we deliberately keep as code (the core decision rule) ----
 const AI_VS_CODE = [
-  ['Sprite &amp; background art', 'AI', 'Creative, high-variability — taste matters, many valid outputs'],
-  ['Asset quality grading', 'AI judge', 'Subjective rubric — a genuine judgment call'],
-  ['Collision, scoring, loop, physics', 'Code', 'Deterministic — must be exact, fast, identical every run'],
-  ['Validation gates', 'Code', 'Fail-loud rules — no LLM variance, no guessing'],
-  ['Background acceptance', 'Code (validate)', "A backdrop that passes image checks is fine — don't over-apply AI"],
+  ['Sprite &amp; background art', 'AI', 'Creative, high-variability - taste matters, many valid outputs'],
+  ['Asset quality grading', 'AI judge', 'Subjective rubric - a genuine judgment call'],
+  ['Collision, scoring, loop, physics', 'Code', 'Deterministic - must be exact, fast, identical every run'],
+  ['Validation gates', 'Code', 'Fail-loud rules - no LLM variance, no guessing'],
+  ['Background acceptance', 'Code (validate)', "A backdrop that passes image checks is fine - don't over-apply AI"],
   ['Provenance / observability', 'Code', 'Hashing &amp; audit must be deterministic'],
 ];
 const aiRows = AI_VS_CODE.map(([t, who, why]) => {
@@ -340,7 +340,7 @@ const PRACTICES = [
   ['Fail-loud validation at boundaries', 'Bad data is rejected and surfaced, never flows downstream', 'validate.mjs · validate-build.mjs · validateScene'],
   ['Prompt as code', 'Generation prompts versioned in git, reviewable, roll-back-able', 'prompts/*.md'],
   ['Closed-loop evaluation', "Judge feedback rewrites the prompt until it passes", 'the agentic loop above'],
-  ['Human-in-the-loop', 'Low-confidence / unverifiable output escalates to a person', 'HITL — never a guess'],
+  ['Human-in-the-loop', 'Low-confidence / unverifiable output escalates to a person', 'HITL - never a guess'],
   ['Resilience', "Exponential backoff on 429/5xx; retries don't double-fire", 'judge.mjs fetchWithBackoff'],
   ['Swappable adapters', 'Change a provider/model without touching the pipeline', 'generate.mjs · judge.mjs'],
   ['Observability', 'Every decision logged; this dashboard reads the trace', 'runs/*.jsonl + this page'],
@@ -356,9 +356,17 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <style>
  body{margin:0;font-family:system-ui,sans-serif;background:#0f1419;color:#e6edf3;line-height:1.5}
  header{padding:22px 28px;background:#161b22;border-bottom:1px solid #30363d}
- h1{margin:0;font-size:21px} h2{font-size:15px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin:30px 0 12px}
- .sub{color:#8b949e;font-size:13px;margin-top:6px;max-width:820px}
- main{padding:20px 28px;max-width:1000px}
+ h1{margin:0;font-size:22px} h2{font-size:15px;color:#cdd9e5;text-transform:uppercase;letter-spacing:.5px;margin:34px 0 12px;padding-left:10px;border-left:3px solid #2f81f7}
+ .sub{color:#8b949e;font-size:13px;margin-top:6px;max-width:880px}
+ main{padding:20px 28px 60px;max-width:1080px;margin:0 auto}
+ .legend{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+ .lg{font-size:12px;color:#adbac7;background:#0d1117;border:1px solid #30363d;border-radius:20px;padding:3px 10px}
+ .wheel{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+ .chip{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:10px 12px;min-width:104px;flex:1;text-align:center}
+ .chip .ce{font-size:20px} .chip .ct{font-weight:700;font-size:12.5px;margin-top:3px} .chip .cc{font-size:11px;color:#8b949e;margin-top:2px}
+ .chip.ai{border-color:#6e40c9;background:#17132a} .chip.code{border-color:#238636;background:#0f1f15} .chip.human{border-color:#9e6a03;background:#1c1409} .chip.play{border-color:#1f6feb;background:#0f1b2d}
+ .warrow{align-self:center;color:#6e7681;font-size:15px}
+ .wback{margin-top:12px;padding:10px 14px;border:1px dashed #6e7681;border-radius:8px;color:#adbac7;font-size:13px;background:#11151a}
  .cards{display:flex;flex-wrap:wrap;gap:12px} .card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;min-width:120px}
  .card .v{font-size:24px;font-weight:700} .card .l{color:#8b949e;font-size:12px;margin-top:2px} .card .h{color:#6e7681;font-size:11px;margin-top:3px}
  .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
@@ -400,10 +408,18 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  code{background:#21262d;padding:1px 5px;border-radius:4px}
 </style></head><body>
 <header>
- <h1>AI Asset Pipeline &mdash; Observability</h1>
- <div class="sub">An AI generates each game sprite, automatic rules and a second AI check it, and anything
- uncertain goes to a human. This page shows the actual decision trail, every quality gate, and what it costs.
- ${runs.length} run(s) logged. Latest judge: <b>${provider}</b>${model !== '-' && model !== 'mock' ? ` (${model})` : ''}.</div>
+ <h1>🦜 Parrot Runner - AI Pipeline Observability</h1>
+ <div class="sub">An AI generates each game asset, automatic rules and a second AI check it, and anything
+ uncertain goes to a human. This page shows the actual decision trail, every quality gate, the real-play
+ loop, and what it costs - readable whether or not you write code.
+ ${runs.length} run(s) logged. Latest judge: <b>${provider}</b>${model !== '-' && model !== 'mock' ? ` (${model})` : ''}. <span class="muted">Updated ${new Date().toISOString().replace('T', ' ').slice(0, 16)} UTC.</span></div>
+ <div class="legend">
+   <span class="lg">🟢 deterministic code (exact)</span>
+   <span class="lg">🔵 AI (creative/judgment)</span>
+   <span class="lg">🟣 AI judge (taste)</span>
+   <span class="lg">🙋 human (final call)</span>
+   <span class="lg">🏆 real-play winner</span>
+ </div>
 </header>
 <main>
  <h2>Brief requirements</h2>
@@ -412,14 +428,14 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  <h2>How it works</h2>
  <div class="flow">${flow}</div>
 
- <h2>What we use AI for &mdash; and what we deliberately keep as code</h2>
+ <h2>What we use AI for - and what we deliberately keep as code</h2>
  <div class="sub" style="margin-bottom:10px">The core decision rule: <b>AI for judgment/creative tasks, plain code for deterministic ones.</b> Knowing where <i>not</i> to use AI is the point.</div>
  <table><thead><tr><th>Task</th><th>Handled by</th><th>Why</th></tr></thead><tbody>${aiRows}</tbody></table>
 
  ${
    agentCfg
      ? `<h2>Agent config &amp; versions (rollback-ready)</h2>
- <div class="sub" style="margin-bottom:10px">The agent <b>runtime</b> is separate from its <b>config</b>: behaviour is changed by editing one versioned file (<code>agents.config.json</code>) &mdash; a reviewable PR and a git-revertable rollback &mdash; not code. Prompt text is versioned as code in <code>prompts/*.md</code>, and each run records the version it used (audit).</div>
+ <div class="sub" style="margin-bottom:10px">The agent <b>runtime</b> is separate from its <b>config</b>: behaviour is changed by editing one versioned file (<code>agents.config.json</code>) - a reviewable PR and a git-revertable rollback - not code. Prompt text is versioned as code in <code>prompts/*.md</code>, and each run records the version it used (audit).</div>
  <table><tbody>
   <tr><td><b>Config version</b></td><td>${agentCfg.version}</td></tr>
   <tr><td><b>Owner</b></td><td>${agentCfg.owner}</td></tr>
@@ -443,16 +459,16 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
  ${
    loopCards
-     ? `<h2>The agentic loop &mdash; how the decision was actually made</h2>
- <div class="sub" style="margin-bottom:10px">Not "trust me." This is the real decision trail from the logs: <b>Agent A</b> generates, <b>Agent B</b> (the AI judge) scores and accepts or rejects, and on a reject Agent A re-generates from B's feedback until it passes &mdash; or a human is called. Watch an asset that was rejected and then re-generated to pass.</div>
+     ? `<h2>The agentic loop - how the decision was actually made</h2>
+ <div class="sub" style="margin-bottom:10px">Not "trust me." This is the real decision trail from the logs: <b>Agent A</b> generates, <b>Agent B</b> (the AI judge) scores and accepts or rejects, and on a reject Agent A re-generates from B's feedback until it passes - or a human is called. Watch an asset that was rejected and then re-generated to pass.</div>
  <div class="loops">${loopCards}</div>`
      : ''
  }
 
  ${
    golden
-     ? `<h2>Judge calibration &mdash; who watches the judge?</h2>
- <div class="sub" style="margin-bottom:10px">The judge is an LLM, so it can drift (a model swap silently moves the quality bar). A <b>golden set</b> of labeled cases &mdash; real good sprites that must pass, plus a deliberately bad image that must be rejected &mdash; checks the judge's agreement with known-correct verdicts. A drop in agreement means the <i>evaluator</i> regressed, caught here before it corrupts future grades.</div>
+     ? `<h2>Judge calibration - who watches the judge?</h2>
+ <div class="sub" style="margin-bottom:10px">The judge is an LLM, so it can drift (a model swap silently moves the quality bar). A <b>golden set</b> of labeled cases - real good sprites that must pass, plus a deliberately bad image that must be rejected - checks the judge's agreement with known-correct verdicts. A drop in agreement means the <i>evaluator</i> regressed, caught here before it corrupts future grades.</div>
  <div class="cards"><div class="card"><div class="v">${golden.agreement}%</div><div class="l">judge agreement</div><div class="h">${golden.provider}:${golden.model}</div></div></div>
  <table style="margin-top:12px"><thead><tr><th>Golden case</th><th>Expected</th><th>Judge said</th><th>Match</th></tr></thead><tbody>${goldenRows}</tbody></table>`
      : ''
@@ -460,12 +476,12 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
  ${
    screenshot || e2eRows || visual
-     ? `<h2>The end product &mdash; tests &amp; visual QA</h2>
- <div class="sub" style="margin-bottom:10px">Two checks on the actual built game: functional Playwright tests (does it load and run), and an AI <b>visual judge</b> that looks at a real gameplay screenshot (does it LOOK right) &mdash; catching what functional tests can't, like the sprite-background bug.</div>
+     ? `<h2>The end product - tests &amp; visual QA</h2>
+ <div class="sub" style="margin-bottom:10px">Two checks on the actual built game: functional Playwright tests (does it load and run), and an AI <b>visual judge</b> that looks at a real gameplay screenshot (does it LOOK right) - catching what functional tests can't, like the sprite-background bug.</div>
  <div class="qa">
   ${gif ? `<div class="shot"><img src="${gif}" alt="gameplay"/><div class="cap">live gameplay (animated)</div></div>` : screenshot ? `<div class="shot"><img src="${screenshot}" alt="gameplay screenshot"/><div class="cap">live gameplay screenshot</div></div>` : ''}
   <div class="qatables">
-   ${visual ? `<div class="vq ${visual.ok ? 'vqok' : 'vqbad'}">AI visual verdict: <b>${visual.ok ? 'looks good ✓' : 'issues found'}</b> (${visual.score}/5) &mdash; ${esc(visual.summary || '')}${visual.issues && visual.issues.length ? '<ul>' + visual.issues.map((i) => `<li>${esc(i)}</li>`).join('') + '</ul>' : ''}</div>` : ''}
+   ${visual ? `<div class="vq ${visual.ok ? 'vqok' : 'vqbad'}">AI visual verdict: <b>${visual.ok ? 'looks good ✓' : 'issues found'}</b> (${visual.score}/5) - ${esc(visual.summary || '')}${visual.issues && visual.issues.length ? '<ul>' + visual.issues.map((i) => `<li>${esc(i)}</li>`).join('') + '</ul>' : ''}</div>` : ''}
    ${e2eRows ? `<table><thead><tr><th>Functional game test</th><th>Status</th></tr></thead><tbody>${e2eRows}</tbody></table>` : ''}
   </div>
  </div>`
@@ -480,7 +496,7 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
  ${
    previewCards
-     ? `<h2>Generated assets &mdash; before &rarr; after</h2>
+     ? `<h2>Generated assets - before &rarr; after</h2>
  <div class="sub" style="margin-bottom:10px">Raw AI output (on its magenta key background) next to the processed, transparent sprite the game uses.</div>
  <div class="gallery">${previewCards}</div>`
      : ''
@@ -488,28 +504,28 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
  ${
    provList.length
-     ? `<h2>Provenance &mdash; proof of AI origin</h2>
- <div class="sub" style="margin-bottom:10px">Each sprite is fingerprinted (SHA-256) when the AI generates it. This re-checks the shipped file still matches &mdash; proving it came from the AI generator and was not swapped for hand-drawn or procedural art. Verification + observability.</div>
+     ? `<h2>Provenance - proof of AI origin</h2>
+ <div class="sub" style="margin-bottom:10px">Each sprite is fingerprinted (SHA-256) when the AI generates it. This re-checks the shipped file still matches - proving it came from the AI generator and was not swapped for hand-drawn or procedural art. Verification + observability.</div>
  <table><thead><tr><th>Asset</th><th>AI generator</th><th>Graded by</th><th>Score</th><th>SHA-256</th><th>Verified</th></tr></thead><tbody>${provRows}</tbody></table>`
      : ''
  }
 
  ${
    traceRows
-     ? `<h2>Run trace &mdash; the full decision log</h2>
- <div class="sub" style="margin-bottom:10px">Structured trace of the latest run (trace id <code>${latestId || '—'}</code>). Every stage is a logged span with a timestamp, outcome, and latency &mdash; the observability layer the rest of this page reads. Nothing here is hand-written.</div>
+     ? `<h2>Run trace - the full decision log</h2>
+ <div class="sub" style="margin-bottom:10px">Structured trace of the latest run (trace id <code>${latestId || '-'}</code>). Every stage is a logged span with a timestamp, outcome, and latency - the observability layer the rest of this page reads. Nothing here is hand-written.</div>
  <table><thead><tr><th>Time</th><th>Stage</th><th>Asset</th><th>Try</th><th>Outcome</th><th>Latency</th></tr></thead><tbody>${traceRows}</tbody></table>`
      : ''
  }
 
  ${
    topCause
-     ? `<h2>Operational insights &mdash; what caused the most rework</h2>
- <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> &mdash; where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped &mdash; fail loud, not silent.)</div>
+     ? `<h2>Operational insights - what caused the most rework</h2>
+ <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> - where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped - fail loud, not silent.)</div>
  <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>
- <div class="sub" style="margin-top:10px"><b>What was actually hard:</b> not the code &mdash; the <b>judgment calls</b>. Where to draw the AI/deterministic line, why the AI judge can't be the sole arbiter (it gave a buggy frame 5/5), and finding the camera bug the functional tests passed straight through. The build is cheap; the <i>decisions</i> are the work.</div>
+ <div class="sub" style="margin-top:10px"><b>What was actually hard:</b> not the code - the <b>judgment calls</b>. Where to draw the AI/deterministic line, why the AI judge can't be the sole arbiter (it gave a buggy frame 5/5), and finding the camera bug the functional tests passed straight through. The build is cheap; the <i>decisions</i> are the work.</div>
  <h2>💸 Cost &amp; tokens (AI is metered)</h2>
- <div class="sub" style="margin-bottom:10px">Every AI call is counted. This whole pipeline runs on free tiers, so spend is ~$0 &mdash; but it's tracked so it scales honestly.</div>
+ <div class="sub" style="margin-bottom:10px">Every AI call is counted. This whole pipeline runs on free tiers, so spend is ~$0 - but it's tracked so it scales honestly.</div>
  <table><thead><tr><th>Meter</th><th>Value</th></tr></thead><tbody>
    <tr><td>AI image generations</td><td>${aiImageCalls} <span class="sub">(Pollinations, $0)</span></td></tr>
    <tr><td>AI judge calls</td><td>${aiJudgeCalls} <span class="sub">(Gemini free tier)</span></td></tr>
@@ -520,35 +536,43 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  }
 
  <h2>🔄 The data flywheel (the whole loop)</h2>
- <div class="sub" style="margin-bottom:10px">Every stage below is built and observable on this page. Production play feeds back into what we generate next &mdash; the system gets smarter each cycle.</div>
- <pre style="line-height:1.5;overflow-x:auto">  ┌───────────────────────────────────────────────────────────────────────────┐
-  │                                                                           ▼
-  │   📝 prompt-as-code ─▶ 🎨 GENERATE ─▶ 🟢 VALIDATE ─▶ 🔵 AI JUDGE ─▶ 🔁 RETRY ─▶ 🙋 ESCALATE
-  │      (versioned)        (AI art)       (hard rules)   (taste, +det     (fix &      (human if
-  │                                                        fallback)        re-prompt)  unsure)
-  │                                                                              │
-  │                                                                              ▼
-  │   🏆 generate more  ◀─ 📊 RANK variants ◀─ 🎯 REAL-PLAY TELEMETRY ◀─ 🕹️ SHIP playable variant
-  │      of the winner      (engagement)        (score · pickups · camera QA)   (validated build)
-  └───────────────────────────────────────────────────────────────────────────┘
-   Deterministic gates everywhere · AI only for judgment · human is the final judge · no guessing</pre>
+ <div class="sub" style="margin-bottom:12px"><b>In plain words:</b> we make the art, check it, ship a version, watch how people actually play it, then make more of whatever plays best - and go round again. Each loop makes the next batch better. Every step below is built and observable on this page.</div>
+ <div class="wheel">
+   ${[
+     ['📝', 'Prompt', 'versioned, like code', ''],
+     ['🎨', 'Make art', 'an AI paints the asset', 'ai'],
+     ['🟢', 'Check rules', 'format, transparent, sized', 'code'],
+     ['🔵', 'AI judges', 'scores it like a designer', 'ai'],
+     ['🔁', 'Fix & retry', 'feedback rewrites the prompt', ''],
+     ['🙋', 'Human if unsure', 'never a guess', 'human'],
+     ['🕹️', 'Ship variant', 'validated playable', 'play'],
+     ['🎯', 'Watch real play', 'score · pickups · camera', 'play'],
+     ['📊', 'Rank winners', 'by engagement', 'play'],
+   ]
+     .map(
+       (c, i) =>
+         `<div class="chip ${c[3]}"><div class="ce">${c[0]}</div><div class="ct">${c[1]}</div><div class="cc">${c[2]}</div></div>${i < 8 ? '<div class="warrow">→</div>' : ''}`
+     )
+     .join('')}
+ </div>
+ <div class="wback">↩ <b>Loop closes here:</b> the winning variant feeds straight back into <b>Make art</b> - generate more of what plays best. <span class="muted">Deterministic gates everywhere · AI only for judgment · human is the final judge · no guessing.</span></div>
 
  ${
    tests
      ? `<h2>✅ Functional tests &amp; regression (re-run on every code change)</h2>
  <div class="sub" style="margin-bottom:10px">CI runs these on every push, so a code change can't silently break play. Unit = game logic; e2e = the real built game in a browser; regression = the golden eval guarding the AI judge from drift.</div>
  <table><thead><tr><th>Suite</th><th>Result</th><th>Cases</th></tr></thead><tbody>
-   <tr><td>🟢 Unit (logic)</td><td><b>${tests.unit.passed}/${tests.unit.total}</b> ${tests.unit.passed === tests.unit.total ? '✅' : '❌'}</td><td class="sub">${tests.unit.cases.map((c) => c.name).join(' · ') || '—'}</td></tr>
-   <tr><td>🔵 e2e (built game)</td><td><b>${tests.e2e.passed}/${tests.e2e.total}</b> ${tests.e2e.passed === tests.e2e.total ? '✅' : '❌'}</td><td class="sub">${tests.e2e.cases.map((c) => c.name).join(' · ') || '—'}</td></tr>
-   ${tests.regression ? `<tr><td>🟣 Regression (judge drift)</td><td><b>${tests.regression.passed ?? '—'}/${tests.regression.total ?? '—'}</b></td><td class="sub">${tests.regression.summary}</td></tr>` : ''}
+   <tr><td>🟢 Unit (logic)</td><td><b>${tests.unit.passed}/${tests.unit.total}</b> ${tests.unit.passed === tests.unit.total ? '✅' : '❌'}</td><td class="sub">${tests.unit.cases.map((c) => c.name).join(' · ') || '-'}</td></tr>
+   <tr><td>🔵 e2e (built game)</td><td><b>${tests.e2e.passed}/${tests.e2e.total}</b> ${tests.e2e.passed === tests.e2e.total ? '✅' : '❌'}</td><td class="sub">${tests.e2e.cases.map((c) => c.name).join(' · ') || '-'}</td></tr>
+   ${tests.regression ? `<tr><td>🟣 Regression (judge drift)</td><td><b>${tests.regression.passed ?? '-'}/${tests.regression.total ?? '-'}</b></td><td class="sub">${tests.regression.summary}</td></tr>` : ''}
  </tbody></table>`
      : ''
  }
 
  ${
    performance
-     ? `<h2>🎯 Closing the loop &mdash; real-play performance (the north-star)</h2>
- <div class="sub" style="margin-bottom:10px">The asset rubric asks "does it look good?". This asks "which variant actually <b>performs in play</b>?". Each variant is run repeatedly; the game's <code>window.__telemetry</code> is aggregated into engagement. In production this same shape is fed by the ad-network's performance webhook &mdash; that's the data flywheel: real play feeds back into what the pipeline generates next. Metric: ${performance.metric}; ${performance.totalRuns} runs.</div>
+     ? `<h2>🎯 Closing the loop - real-play performance (the north-star)</h2>
+ <div class="sub" style="margin-bottom:10px">The asset rubric asks "does it look good?". This asks "which variant actually <b>performs in play</b>?". Each variant is run repeatedly; the game's <code>window.__telemetry</code> is aggregated into engagement. In production this same shape is fed by the ad-network's performance webhook - that's the data flywheel: real play feeds back into what the pipeline generates next. Metric: ${performance.metric}; ${performance.totalRuns} runs.</div>
  <table><thead><tr><th>Variant</th><th>Engagement</th><th>Share</th><th>Avg score</th><th>Avg pickups</th><th>Runs</th></tr></thead><tbody>
    ${performance.perVariant
      .map(
@@ -563,8 +587,8 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
  ${
    shadow
-     ? `<h2>Champion vs Challenger &mdash; safe prompt rollout</h2>
- <div class="sub" style="margin-bottom:10px">A candidate prompt is shadow-run beside the live one, graded the same way, and only recommended for promotion when it clearly wins. The system never auto-swaps &mdash; <b>the human approves the version bump</b>. Judge: ${shadow.judge}.</div>
+     ? `<h2>Champion vs Challenger - safe prompt rollout</h2>
+ <div class="sub" style="margin-bottom:10px">A candidate prompt is shadow-run beside the live one, graded the same way, and only recommended for promotion when it clearly wins. The system never auto-swaps - <b>the human approves the version bump</b>. Judge: ${shadow.judge}.</div>
  <table><thead><tr><th>Prompt</th><th>Avg score</th><th>Samples</th><th>Passes deterministic gate</th></tr></thead><tbody>
    <tr><td>${shadow.champion.label}</td><td><b>${shadow.champion.avgScore}</b></td><td>${shadow.champion.n}</td><td>${shadow.champion.allDetOk ? '✅' : '❌'}</td></tr>
    <tr><td>${shadow.challenger.label}</td><td><b>${shadow.challenger.avgScore}</b></td><td>${shadow.challenger.n}</td><td>${shadow.challenger.allDetOk ? '✅' : '❌'}</td></tr>
@@ -577,13 +601,13 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  <div class="sub" style="margin-bottom:10px">Every automatic check in the project. "live" = result from this run; "wired" = runs in <code>npm run ci</code> / CI.</div>
  <table><thead><tr><th>Gate</th><th>What it guarantees (plain)</th><th>How (technical)</th><th>Status</th></tr></thead><tbody>${gateRows}</tbody></table>
 
- <h2>Engineering best practices &mdash; where each one lives</h2>
+ <h2>Engineering best practices - where each one lives</h2>
  <table><thead><tr><th>Practice</th><th>What it means</th><th>Where</th></tr></thead><tbody>${practiceRows}</tbody></table>
 
  <div class="blind">
   <h3>What this does NOT measure yet (the next data to wire in)</h3>
   <p>This tracks <b>internal quality</b> (the rubric) and <b>correctness</b> (the gates). It does <b>not</b>
-  yet track <b>real-world ad performance</b> &mdash; click-through, install rate, playtime &mdash; which should
+  yet track <b>real-world ad performance</b> - click-through, install rate, playtime - which should
   ultimately pick the winning variant.</p>
   <p>Every asset is already a discrete, logged record, so feeding the ad network's performance webhook into
   <code>runs/</code> flips the north-star from "rubric score" to "variant win-rate," closing the loop from
@@ -591,7 +615,7 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
   <p>The game emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups, score,
   duration); the collector aggregates it per variant into engagement, and the champion/challenger
   selector recommends what to promote. Swapping the local collector for a production performance
-  webhook is the only remaining change &mdash; the shape is identical.</p>
+  webhook is the only remaining change - the shape is identical.</p>
  </div>
 </main></body></html>`;
 

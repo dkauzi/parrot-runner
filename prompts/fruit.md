@@ -1,4 +1,4 @@
-# Asset: Collectible Fruit — v0.1
+# Asset: Collectible Fruit - v0.1
 
 Seen from the FRONT (faces the camera as a billboard). Tropical fruit to match the jungle
 theme. Generate one clean hero fruit first; add variants later only if time allows.

@@ -98,7 +98,7 @@ export class Game {
     sun.position.set(2, 5, 4);
     this.scene.add(hemi, sun);
 
-    // Static jungle FLOOR — a stable ground reference (AI-textured). Motion is carried by the
+    // Static jungle FLOOR - a stable ground reference (AI-textured). Motion is carried by the
     // trees and fruit passing the camera (like fixed lamp posts on a freeway), not by the ground.
     const groundTex = new TextureLoader().load(groundUrl);
     groundTex.wrapS = groundTex.wrapT = RepeatWrapping;
@@ -178,7 +178,7 @@ export class Game {
     endChime();
     this.ui.showEnd(this.score);
 
-    // Gameplay telemetry — the SEED of the performance flywheel (the data we're "blind to" today):
+    // Gameplay telemetry - the SEED of the performance flywheel (the data we're "blind to" today):
     // which variant, how many pickups, how long. A backend would collect this to pick the winning
     // asset/variant by real play, not just the aesthetic rubric. Here we emit it on a global hook.
     const telemetry = {
@@ -208,7 +208,7 @@ export class Game {
     const parrotZ = PARROT_Z0 - this.distance;
     this.parrot.position.z = parrotZ;
     // Floor plane follows the camera so it always covers the view, BUT its texture offset is tied
-    // to forward distance — so the ground rushes UNDER you (world-fixed look) = the sense of speed.
+    // to forward distance - so the ground rushes UNDER you (world-fixed look) = the sense of speed.
     this.ground.position.z = camZ - GROUND_AHEAD;
     if (this.groundTex) this.groundTex.offset.y = this.distance * 0.125;
     this.camBase.set(0, 2.6, camZ);
@@ -284,7 +284,7 @@ export class Game {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
     // Expose the projection so tests can assert perspective is correct (FOV sane, and the camera
-    // aspect matches the canvas aspect — otherwise the 3D world renders stretched/squashed).
+    // aspect matches the canvas aspect - otherwise the 3D world renders stretched/squashed).
     (window as unknown as { __view: unknown }).__view = {
       fov: this.camera.fov,
       aspect: this.camera.aspect,

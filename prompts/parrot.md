@@ -1,4 +1,4 @@
-# Asset: Parrot (player sprite) — v0.1
+# Asset: Parrot (player sprite) - v0.1
 
 The player is viewed FROM BEHIND in the runner (camera sits behind it), so generate a
 back/top view with wings spread, matching reference image 1.

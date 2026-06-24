@@ -5,7 +5,7 @@
  * move to the centre, then feather-heal the resulting centre cross with a local blur. The new
  * borders are now continuous, so the texture tiles with zero visible seam.
  *
- * Deterministic image processing — no AI. Keeps the raw AI output as ground.raw.jpg for the
+ * Deterministic image processing - no AI. Keeps the raw AI output as ground.raw.jpg for the
  * before/after gallery. Run:  node pipeline/agentic/make-seamless.mjs
  */
 import { Jimp } from 'jimp';

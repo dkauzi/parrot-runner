@@ -34,14 +34,14 @@ export function judgeTool() {
   };
 }
 
-/** The instruction text paired with the image. The judge reviews as a senior GAME DESIGNER —
+/** The instruction text paired with the image. The judge reviews as a senior GAME DESIGNER -
  *  evaluating game feel and readability at speed, not just whether the art is pretty. */
 export function judgePrompt(asset) {
   const lines = CRITERIA.map((c) => `- ${c.key}: ${c.label}`).join('\n');
   return (
     `You are a SENIOR GAME DESIGNER reviewing an AI-generated "${asset}" collectible for a fast ` +
     `tropical-jungle auto-runner. The player flies forward and must INSTANTLY recognise and grab ` +
-    `it — at small size, in motion, against a busy jungle background. Judge GAME FEEL and ` +
+    `it - at small size, in motion, against a busy jungle background. Judge GAME FEEL and ` +
     `readability, not prettiness: does it read at a glance, pop from the background, and look like ` +
     `a desirable thing to collect?\n\n` +
     `Score each criterion from 1 (poor) to 5 (excellent):\n${lines}\n\n` +

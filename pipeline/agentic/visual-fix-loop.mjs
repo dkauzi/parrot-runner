@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Product-level agentic loop — TWO agents fixing the end product itself.
+ * Product-level agentic loop - TWO agents fixing the end product itself.
  *
  *   Agent B (visual judge): looks at a screenshot of the BUILT game and decides if it looks right.
  *   Agent A (generator):    on a reject, regenerates the assets and rebuilds the game.
  * Repeat until Agent B is satisfied (or max iterations). Every iteration's screenshot + verdict is
  * logged so the dashboard shows the loop. This is the SaPPIA pattern applied to the playable, not
- * just to one sprite — exactly how it caught the "sprites have coloured background boxes" bug.
+ * just to one sprite - exactly how it caught the "sprites have coloured background boxes" bug.
  *
  * Run:  GEMINI_API_KEY=... node pipeline/agentic/visual-fix-loop.mjs   (needs the built dist + key)
  */
@@ -37,7 +37,7 @@ async function screenshot() {
 }
 
 async function judge(shot) {
-  if (!key) return { ok: true, score: 0, issues: [], summary: 'no GEMINI_API_KEY — judging skipped' };
+  if (!key) return { ok: true, score: 0, issues: [], summary: 'no GEMINI_API_KEY - judging skipped' };
   const prompt =
     'You are a senior game designer doing VISUAL QA on a screenshot of a tropical-jungle flying ' +
     'collectible game. Are the collectible/tree sprites CLEAN cutouts (NO coloured rectangle boxes ' +
@@ -79,7 +79,7 @@ for (let i = 1; i <= MAX; i++) {
   writeFileSync(join(OUT, 'game-screenshot.png'), shot);
   verdict = await judge(shot);
   history.push({ iteration: i, ok: verdict.ok, score: verdict.score, issues: verdict.issues, summary: verdict.summary });
-  console.log(`Iteration ${i}: ${verdict.ok ? 'OK ✓' : 'ISSUES'} (${verdict.score}/5) — ${verdict.summary}`);
+  console.log(`Iteration ${i}: ${verdict.ok ? 'OK ✓' : 'ISSUES'} (${verdict.score}/5) - ${verdict.summary}`);
   if (verdict.ok || i === MAX) break;
   console.log('Agent A fixing: regenerating assets + rebuilding...');
   fix();

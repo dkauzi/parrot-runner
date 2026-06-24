@@ -35,14 +35,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async ({ page }) => {
-  // Stop the render loop before the context tears down — software-GL teardown can hang while a
+  // Stop the render loop before the context tears down - software-GL teardown can hang while a
   // heavy WebGL loop is still running. Best-effort; ignore if the page is already gone.
   await page.evaluate(() => (window as { __stopLoop?: () => void }).__stopLoop?.()).catch(() => {});
 });
 
 test('captures a gameplay screenshot (visual artifact)', async ({ page }) => {
   // Play a moment and snapshot the running game, so every test run leaves a visual artifact the
-  // dashboard can show — and a real reviewer (or the AI visual judge) can eyeball regressions like
+  // dashboard can show - and a real reviewer (or the AI visual judge) can eyeball regressions like
   // the sprite-transparency bug that functional tests can't see.
   await page.goto(`${URL}?test=fastend`, { waitUntil: 'load' });
   await page.waitForTimeout(900); // let a few frames render
@@ -86,7 +86,7 @@ test('WebGL context is healthy (actually rendering)', async ({ page }) => {
 test('perspective/projection is correct (sane FOV, no stretch)', async ({ page }) => {
   // Perspective != camera pose. This checks the LENS: the field-of-view is in a sane range (not a
   // fisheye or a flat, depth-less view) and the camera aspect matches the canvas, so the 3D world
-  // is never rendered stretched or squashed. Deterministic — a code invariant, not screenshot-guessing.
+  // is never rendered stretched or squashed. Deterministic - a code invariant, not screenshot-guessing.
   await page.goto(URL, { waitUntil: 'load' });
   const v = await page.evaluate(() => (window as any).__view);
   expect(v, 'game should expose window.__view').toBeTruthy();

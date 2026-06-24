@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
   // Serial: each test runs a full WebGL game, and software-GL (swiftshader) in CI does not handle
-  // several live WebGL contexts at once — parallel workers starve each other and time out.
+  // several live WebGL contexts at once - parallel workers starve each other and time out.
   fullyParallel: false,
   workers: 1,
   // The rigged 3D parrot renders far slower under software-GL (CI) than on a real GPU, so give each

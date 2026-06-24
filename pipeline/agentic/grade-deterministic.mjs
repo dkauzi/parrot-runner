@@ -1,15 +1,15 @@
 /**
- * Deterministic sprite grader — the judge that is ALWAYS right because it's just math.
+ * Deterministic sprite grader - the judge that is ALWAYS right because it's just math.
  *
  * Principle (the user's, and correct): the AI judge handles taste, but it must never be the sole
  * arbiter. Anything an LLM could be "unsure" about that code CAN measure, code should measure. This
- * checks the things that make a sprite a usable game cutout — and would have caught the opaque
+ * checks the things that make a sprite a usable game cutout - and would have caught the opaque
  * pink-background bug instantly (it's literally "the background isn't transparent"):
  *   - transparency ratio  (there is a real transparent background, not an opaque box)
  *   - subject coverage     (not empty, not filling the whole frame)
  *   - rough centering      (the subject sits near the middle)
  * It runs BEFORE the AI judge (cheap, deterministic gate) and is also the FALLBACK verdict when the
- * AI judge is unavailable/rate-limited — so we degrade to deterministic, never to "guess".
+ * AI judge is unavailable/rate-limited - so we degrade to deterministic, never to "guess".
  */
 
 import { Jimp } from 'jimp';

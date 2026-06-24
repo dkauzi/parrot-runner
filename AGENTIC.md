@@ -20,13 +20,13 @@ right size: a few small files, no agent framework, runs offline for free.
 |---|---|---|
 | 1. Generate | Make a sprite image from the versioned prompt | image provider (AI) |
 | 2. Validate | Hard rules: real PNG, square, transparent, under size budget | deterministic code |
-| 3. Judge | Score 1–5 on 5 quality criteria (reads at scale, silhouette, on-theme, palette, transparency) | LLM judge (Claude) |
+| 3. Judge | Score 1-5 on 5 quality criteria (reads at scale, silhouette, on-theme, palette, transparency) | LLM judge (Claude) |
 | 4. Retry | If it scores low, send the judge's feedback back and try again | orchestrator |
-| 5. Escalate | If it still can't pass, flag for a **human** — the AI never guesses | human-in-the-loop |
+| 5. Escalate | If it still can't pass, flag for a **human** - the AI never guesses | human-in-the-loop |
 
 ## Run it
 
-**Locally (no API key, fully free — uses offline mock providers):**
+**Locally (no API key, fully free - uses offline mock providers):**
 ```bash
 npm run pipeline             # generate + validate + judge all 3 sprites
 npm run pipeline:dashboard   # build dashboard.html, open it in a browser
@@ -52,23 +52,23 @@ ANTHROPIC_API_KEY=sk-... npm run pipeline
 ```
 
 Provider priority: **Claude key > Gemini key > offline mock**. Image: `IMAGE_PROVIDER=pollinations`
-(free real art) or `mock` (offline). All selection is config/env — never a code change.
+(free real art) or `mock` (offline). All selection is config/env - never a code change.
 
-**In Docker** (proves it runs identically anywhere — see `Dockerfile`):
+**In Docker** (proves it runs identically anywhere - see `Dockerfile`):
 ```bash
 docker build -t parrot-playable .   # runs the gate AND the pipeline + dashboard
 ```
 
 **In CI** (`.github/workflows/main.yml`): the same commands run on every push. Adding
 `npm run pipeline` there means each push regenerates and re-grades assets and can publish the
-dashboard — the pipeline is part of the build, not a side script.
+dashboard - the pipeline is part of the build, not a side script.
 
 ## Why this is repeatable and easy to change
 
 - **Repeatable:** one command (`npm run pipeline`) does the whole thing the same way every time,
   on a laptop, in Docker, or in CI. Nothing is manual.
 - **Version as code:** the generation prompts live in `prompts/*.md` under version control, with
-  a rejected-attempts log — so a prompt change is reviewable and reversible, exactly like source
+  a rejected-attempts log - so a prompt change is reviewable and reversible, exactly like source
   code. The judge's rubric lives in `rubric.mjs`, one source of truth for both AIs.
 - **Changeable when an API changes:** generation and judging are **swappable adapters**
   (`generate.mjs`, `judge.mjs`). If an image API or model API changes, you edit **one adapter**;
@@ -91,22 +91,22 @@ average quality score, how many need a human, total spend, and a per-asset table
 ## What we are blind to (the honest, senior part)
 
 The dashboard measures **internal quality** (the rubric). It does **not** yet measure **real-world
-ad performance** — click-through, install rate, playtime — which is what should ultimately decide
+ad performance** - click-through, install rate, playtime - which is what should ultimately decide
 which variant wins. The architecture is already shaped to ingest it: every asset and variant is a
 discrete, logged record. Feed the ad network's performance webhook into `runs/` and the north-star
 metric flips from "rubric score" to "variant win-rate," closing the loop from production back into
 generation. **That is the data flywheel; this dashboard is its first half.** Building the flywheel's
-second half is the obvious next step — and it's wiring, not a redesign.
+second half is the obvious next step - and it's wiring, not a redesign.
 
 ## Files
 
-- `run.mjs` — the orchestrator (the five-stage loop) + CLI + logging
-- `generate.mjs` — image provider adapter (mock today; real image API drops in here)
-- `judge.mjs` — LLM judge adapter (Claude via raw `fetch`, vision + structured tool-use; mock fallback)
-- `rubric.mjs` — the rubric + the judge's tool schema (one source of truth)
-- `png.mjs` — zero-dependency PNG encoder + the in-memory quality gate
-- `dashboard.mjs` — reads the logs, writes the self-contained dashboard
-- `prompts/*.md` — the versioned generation prompts (prompt as code)
+- `run.mjs` - the orchestrator (the five-stage loop) + CLI + logging
+- `generate.mjs` - image provider adapter (mock today; real image API drops in here)
+- `judge.mjs` - LLM judge adapter (Claude via raw `fetch`, vision + structured tool-use; mock fallback)
+- `rubric.mjs` - the rubric + the judge's tool schema (one source of truth)
+- `png.mjs` - zero-dependency PNG encoder + the in-memory quality gate
+- `dashboard.mjs` - reads the logs, writes the self-contained dashboard
+- `prompts/*.md` - the versioned generation prompts (prompt as code)
 
 ## The closed loop (the data flywheel)
 
@@ -115,7 +115,7 @@ in play?"*. The game emits `window.__telemetry` (variant, score, pickups, durati
 `collect-telemetry.mjs` aggregates it **per variant** into an engagement score, and the dashboard's
 **"Closing the loop"** panel ranks them and recommends *which variant to generate more of*. Locally
 that's Playwright runs; in production the **same shape** is fed by the ad-network's performance
-webhook — so production play feeds straight back into what the pipeline generates next.
+webhook - so production play feeds straight back into what the pipeline generates next.
 
 ```
 generate → grade → ship variant → real-play telemetry → rank variants → generate more of the winner

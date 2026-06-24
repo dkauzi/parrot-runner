@@ -9,7 +9,7 @@
 ![tests](https://img.shields.io/badge/tests-11%20unit%20%2B%205%20e2e%20passing-3fb950)
 ![assets](https://img.shields.io/badge/assets-AI%E2%80%91generated%20%2B%20verified-a371f7)
 
-A forward-flying parrot collecting fruit through a jungle — **built as a playable ad** — plus the
+A forward-flying parrot collecting fruit through a jungle - **built as a playable ad** - plus the
 **agentic AI pipeline that generates and quality-controls its art**. 
 The game is the artefact; 
 The pipeline is the point.
@@ -27,7 +27,7 @@ The pipeline is the point.
 An AI **draws** each game asset (parrot, fruit, trees, jungle). Before any asset is used, automatic
 checks and a second AI **grade** it; anything wrong is **regenerated**; anything uncertain goes to a
 **human**. Every step is logged and shown on a live **dashboard** so anyone can see *what was made,
-whether it's good, what it cost, and what needs attention* — no code required.
+whether it's good, what it cost, and what needs attention* - no code required.
 
 ```
   PROMPT ─▶ 🎨 GENERATE ─▶ 🟢 VALIDATE ─▶ 🔵 JUDGE ─▶ 🔁 RETRY ─▶ 🙋 ESCALATE
@@ -40,7 +40,7 @@ whether it's good, what it cost, and what needs attention* — no code required.
 | 🟢 **Validate** | Code checks the basics (right format, transparent, right size). *Always runs.* |
 | 🔵 **Judge** | A second AI scores it like a game designer (reads at speed? pops? on-theme?). |
 | 🔁 **Retry** | If the score is low, the AI's feedback rewrites the prompt and tries again. |
-| 🙋 **Escalate** | If it still can't pass, a human is asked — the AI never guesses. |
+| 🙋 **Escalate** | If it still can't pass, a human is asked - the AI never guesses. |
 
 ---
 
@@ -55,7 +55,7 @@ pipeline/agentic/        the AI system
   grade-deterministic.mjs  ALWAYS-ON deterministic grader (transparency / coverage / centering)
   rubric.mjs             one source of truth for the grading criteria
   agents.config.json     versioned config-as-data (providers, models, thresholds, prompt versions)
-  eval.mjs               golden eval — guards the JUDGE against drift
+  eval.mjs               golden eval - guards the JUDGE against drift
   visual-eval.mjs        plays the built game, screenshots it, AI + deterministic visual QA
   visual-fix-loop.mjs    two-agent loop: judge the screenshot → regenerate → repeat
   dashboard.mjs          self-contained observability dashboard
@@ -83,18 +83,18 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 
 | Task | Handled by | Why |
 |---|---|---|
-| Sprite & background **art** | 🟣 AI | creative, high-variability — taste matters |
-| Asset **quality grading** | 🟣 AI judge | subjective rubric — real judgment |
+| Sprite & background **art** | 🟣 AI | creative, high-variability - taste matters |
+| Asset **quality grading** | 🟣 AI judge | subjective rubric - real judgment |
 | Collision, scoring, loop, **physics** | 🟢 code | must be exact, fast, identical every run |
 | **Validation** gates | 🟢 code | fail-loud rules, no LLM variance |
-| Background **acceptance** | 🟢 code | a backdrop that passes image checks is fine — don't over-apply AI |
+| Background **acceptance** | 🟢 code | a backdrop that passes image checks is fine - don't over-apply AI |
 
 ---
 
 ## 🛡️ Key engineering decisions
 
 1. **Deterministic judge always; AI is additive.** The AI grader handles taste, but a deterministic
-   grader runs first and is the **fallback** when the AI is rate-limited or unsure — the system
+   grader runs first and is the **fallback** when the AI is rate-limited or unsure - the system
    degrades to code, never to a guess. (This is what catches "the background isn't transparent.")
 2. **Fail-loud validation at every boundary.** Bad assets are rejected and surfaced immediately
    (`validate.mjs`, `validate-build.mjs`, `grade-deterministic.mjs`), never flowed downstream.
@@ -103,15 +103,15 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
    git-revertable rollback. The runtime is separate from the config.
 4. **Evaluate the evaluator.** A golden set of labelled assets regression-tests the *judge* itself, so
    a silent model swap that moves the quality bar is caught (`npm run eval`).
-5. **Swappable adapters.** Image and judge providers are adapters — change a vendor/model in one place
+5. **Swappable adapters.** Image and judge providers are adapters - change a vendor/model in one place
    (Claude > Gemini > offline mock), never a rewrite. Free by default (Pollinations + Gemini free tier).
 6. **Resilience.** Exponential backoff on 429/5xx; the pipeline never double-fires or hangs on a
-   provider outage — it falls back.
+   provider outage - it falls back.
 7. **Observability everywhere.** Every stage is a logged span (trace id, outcome, latency). The
-   dashboard reads those logs — nothing on it is hand-written.
+   dashboard reads those logs - nothing on it is hand-written.
 8. **Right-sized restraint.** No agent framework for a few assets; built the high-signal pieces.
 9. **Closed the loop.** Real play (`window.__telemetry`) is aggregated per variant into engagement and
-   ranked, so the north-star is *which variant performs*, not just *which looks good* — the flywheel.
+   ranked, so the north-star is *which variant performs*, not just *which looks good* - the flywheel.
 10. **A second validate agent checks the play experience, not just assets.** `visual-eval` plays the
     built game, screenshots real gameplay, and grades the **camera/framing** (deterministic: is the
     mid-frame mostly floor? + AI: is the bird well-framed for play?). This is what caught the
@@ -119,9 +119,9 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 11. **AI is metered.** Image gens and judge calls are counted and costed on the dashboard (free tiers →
     ~$0, but tracked so it scales honestly).
 12. **Live dashboard == local.** `dashboard.html` is fully self-contained (data/images inlined), so
-    Pages serves exactly what's built — `build:pages` just copies it, no browser or keys in CI.
+    Pages serves exactly what's built - `build:pages` just copies it, no browser or keys in CI.
 
-> The hard part was never the code — it was the **judgment**: where to draw the AI/deterministic line,
+> The hard part was never the code - it was the **judgment**: where to draw the AI/deterministic line,
 > why the AI judge can't be the sole arbiter, and catching a camera bug the green tests sailed past.
 
 ---
@@ -145,7 +145,7 @@ play**?"*. The game emits `window.__telemetry` (variant, score, pickups, duratio
 `collect-telemetry.mjs` aggregates it **per variant** into an engagement score, and the dashboard's
 **"Closing the loop"** panel ranks them and recommends *which variant to generate more of*. Locally
 that's Playwright runs; in production the **same shape** is fed by the ad-network's performance
-webhook — so production play feeds straight back into what the pipeline generates next.
+webhook - so production play feeds straight back into what the pipeline generates next.
 
 ```
 generate ─▶ grade ─▶ ship variant ─▶ 🎯 real-play telemetry ─▶ rank ─▶ generate more of the winner

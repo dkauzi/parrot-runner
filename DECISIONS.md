@@ -1,6 +1,6 @@
 # Decision Log
 
-The reasoning trail for this project — which tool, why, what it produced, and what I rejected.
+The reasoning trail for this project - which tool, why, what it produced, and what I rejected.
 Written as I went. The principle I held to: track outcomes, not just inputs.
 
 ## Which AI tools I used, and why
@@ -10,7 +10,7 @@ Written as I went. The principle I held to: track outcomes, not just inputs.
 | Parrot, fruit, tree, background, ground art | Pollinations (free image gen) | creative/high-variability work where taste matters; no key, no cost | paid APIs (unnecessary for the quality bar); hand-drawing (slow) |
 | Asset quality grading | Gemini 2.5-flash (vision, structured JSON) | a subjective rubric needs real judgment; free tier | trusting raw generation (no gate); a paid judge |
 | Transparency on sprites | deterministic adaptive chroma-key (code) | exact, repeatable; free models can't output alpha | asking the model for transparency (it can't); manual cut-outs |
-| Game logic — collision, scoring, loop, physics | deterministic TypeScript | must be exact, fast, identical every run | LLM-generated logic (variance, leaks) — explicitly chose **not** to use AI here |
+| Game logic - collision, scoring, loop, physics | deterministic TypeScript | must be exact, fast, identical every run | LLM-generated logic (variance, leaks) - explicitly chose **not** to use AI here |
 | Validation + build gates | deterministic code | fail-loud rules; no LLM variance | an AI reviewer as the only gate |
 
 Where I chose **not** to use AI is the point: anything that must be exact or measurable is code.
@@ -21,7 +21,7 @@ AI is reserved for the genuinely creative/judgment calls.
 - **Transparent backgrounds.** Free image models only output opaque images. First chroma-key
   assumed pure magenta and leaked pink edges; I redid it as an **adaptive, corner-sampled**
   chroma-key that learns the real background colour per image.
-- **The AI judge is not trustworthy alone.** It once scored an obviously buggy frame 5/5 — because
+- **The AI judge is not trustworthy alone.** It once scored an obviously buggy frame 5/5 - because
   it had screenshotted the *end card*, not gameplay, and because it's lenient. I redid the visual
   agent to capture **real gameplay** and added a **deterministic floor** (pink detector, camera
   check) that is the verdict whenever the AI is unsure or rate-limited. This became a core rule.
@@ -30,7 +30,7 @@ AI is reserved for the genuinely creative/judgment calls.
   flies forward like a race car). Took a couple of iterations to get the ground to read as static.
 - **Ground seam + colour.** Redone several times: a mirrored wrap created a kaleidoscope (rejected);
   then a green tint + offset tiling; finally an **offset-and-blend seamless** texture pass.
-- **The "upside-down bird."** A real bug the green tests sailed past — the moving camera's look-at
+- **The "upside-down bird."** A real bug the green tests sailed past - the moving camera's look-at
   was too close, so it stared steeply down. Fixed by looking far ahead, and I added a
   **camera/playability check** to the visual agent so this class of bug fails loud next time.
 - **Rate limits.** Gemini 429s and daily quota kept blocking the judge; handled with backoff, a

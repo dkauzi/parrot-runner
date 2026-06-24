@@ -23,7 +23,7 @@ const POP_TIME = 0.22;
 const FRUIT_POOL = 28;
 const TREE_POOL = 18;
 const FLOOR_Y = -0.4; // matches the scrolling ground plane in Game.ts (trees stand on it)
-const TREE_X = 6.5; // well outside the fruit lane — trees are roadside scenery, not in your path
+const TREE_X = 6.5; // well outside the fruit lane - trees are roadside scenery, not in your path
 
 interface Item {
   sprite: Sprite;
@@ -36,7 +36,7 @@ interface Item {
 }
 
 // Trees are FIXED-orientation planes (not camera-facing billboards), so as you fly past they show
-// real perspective foreshortening — like driving past roadside lamp posts, not turning signs.
+// real perspective foreshortening - like driving past roadside lamp posts, not turning signs.
 interface Tree {
   mesh: Mesh;
   halfHeight: number;
@@ -173,7 +173,7 @@ export class Spawner {
     // Lined along the route at a consistent roadside distance, alternating sides (lamp-post rows).
     const x = this.treeSide * (TREE_X + rand(-0.3, 0.5));
     this.treeSide *= -1;
-    // Grounded and FIXED in the world — the bird flies past it; it does not move.
+    // Grounded and FIXED in the world - the bird flies past it; it does not move.
     t.mesh.position.set(x, FLOOR_Y + t.halfHeight, z);
     t.mesh.visible = true;
   }

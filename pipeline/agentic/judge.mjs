@@ -5,7 +5,7 @@
  *   - `anthropicJudge` sends the image to Claude (vision) and forces a clean, structured score via
  *     tool-use, so we never have to parse free text. Activates automatically when an API key is set.
  *   - `mockJudge` produces a deterministic score offline, so the pipeline still runs with no key.
- * Either way the rest of the system gets the same verdict shape — another swappable adapter.
+ * Either way the rest of the system gets the same verdict shape - another swappable adapter.
  *
  * Model selection lives in config (default claude-opus-4-8). Cheaper judges are a config change:
  *   claude-opus-4-8  $5/$25 per MTok   (default)
@@ -95,7 +95,7 @@ export async function anthropicJudge({ buffer, asset, model, apiKey }) {
 /**
  * FREE real vision judge via Google Gemini (generous free tier).
  *
- * Plain-language: same job as the Claude judge — look at the sprite, score it against the rubric —
+ * Plain-language: same job as the Claude judge - look at the sprite, score it against the rubric -
  * but using Google's free model. Asks for JSON back so we never parse free text. Activates when
  * GEMINI_API_KEY is set. Default model gemini-2.0-flash (override with GEMINI_MODEL).
  */
@@ -146,7 +146,7 @@ export async function mockJudge({ buffer, asset }) {
   return { ok: true, verdict, provider: 'mock', model: 'mock', costUsd: 0 };
 }
 
-/** Pick the judge based on config. Swappable adapter — add a provider here, nothing else moves. */
+/** Pick the judge based on config. Swappable adapter - add a provider here, nothing else moves. */
 export function getJudge(provider) {
   if (provider === 'anthropic') return anthropicJudge;
   if (provider === 'gemini') return geminiJudge;

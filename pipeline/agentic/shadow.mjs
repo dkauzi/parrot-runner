@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Champion vs Challenger — shadow-test a candidate prompt beside the live one.
+ * Champion vs Challenger - shadow-test a candidate prompt beside the live one.
  *
  * The "run the new thing silently next to the proven thing, compare, promote only when it wins"
  * pattern. Generates N samples from each prompt, grades both the SAME way (deterministic gate +
- * AI judge for taste), and RECOMMENDS promote/hold. It never auto-swaps — the human remains the
+ * AI judge for taste), and RECOMMENDS promote/hold. It never auto-swaps - the human remains the
  * judge; this just brings evidence. Output feeds the dashboard.
  *
  * Run:  node pipeline/agentic/shadow.mjs --asset fruit --n 3 [--challenger-file p.md]
@@ -82,7 +82,7 @@ const verdict = {
   delta,
   margin: MARGIN,
   recommendation: promote ? 'PROMOTE challenger' : 'HOLD champion',
-  note: 'Recommendation only — a human approves the prompt-version bump (human remains the judge).',
+  note: 'Recommendation only - a human approves the prompt-version bump (human remains the judge).',
   at: new Date().toISOString(),
 };
 writeFileSync(join(OUT, 'shadow-eval.json'), JSON.stringify(verdict, null, 2));

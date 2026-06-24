@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The orchestrator — the agentic loop that turns prompts into approved sprites.
+ * The orchestrator - the agentic loop that turns prompts into approved sprites.
  *
  * Plain-language for stakeholders: this is the assembly line.
  *   1. GENERATE  an image from the versioned prompt            (Agent A)
@@ -150,7 +150,7 @@ async function run() {
         continue;
       }
 
-      // The background (scene) is gated DETERMINISTICALLY — a backdrop that passes the image
+      // The background (scene) is gated DETERMINISTICALLY - a backdrop that passes the image
       // checks is fine; spending an LLM rubric on it would be over-applying AI. The gameplay
       // sprites below get the full LLM judge because their quality is a real judgment call.
       if (kind === 'scene') {
@@ -167,7 +167,7 @@ async function run() {
         break;
       }
 
-      // STAGE 2b: DETERMINISTIC quality grade — always runs. Catches opaque-background / empty /
+      // STAGE 2b: DETERMINISTIC quality grade - always runs. Catches opaque-background / empty /
       // off-centre sprites without an LLM (this is what should have caught the pink-box bug), and
       // is the FALLBACK verdict when the AI judge is unavailable.
       const det = await gradeSprite(buffer);

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Golden evaluation — the regression that guards the JUDGE itself.
+ * Golden evaluation - the regression that guards the JUDGE itself.
  *
  * The judge is an LLM, and LLMs drift (a model swap silently moves our quality bar). So we keep a
  * small GOLDEN SET of labeled cases with known-correct verdicts: real accepted sprites that should
  * pass, and a deliberately bad image that should be rejected. This runs the judge over them and
- * reports its AGREEMENT with the known labels. If agreement drops, the EVALUATOR regressed — caught
+ * reports its AGREEMENT with the known labels. If agreement drops, the EVALUATOR regressed - caught
  * here, before it quietly corrupts every future grade. This is "feed inputs whose perfect outcome
  * we know" applied to the judge.
  *
@@ -24,7 +24,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 const THRESHOLD = 18;
 
-/** A deliberately bad collectible: a flat opaque gray square — off-theme, no silhouette, no alpha. */
+/** A deliberately bad collectible: a flat opaque gray square - off-theme, no silhouette, no alpha. */
 function solidGray() {
   const s = 256;
   const d = Buffer.alloc(s * s * 4);
@@ -74,7 +74,7 @@ for (const c of CASES) {
 
 const agreement = Math.round((agree / CASES.length) * 100);
 console.log(`\nJudge agreement with golden labels: ${agreement}% (${agree}/${CASES.length})  via ${provider}:${model}`);
-if (provider === 'mock') console.log('NOTE: mock judge is not a real evaluator — run with GEMINI_API_KEY for a meaningful result.');
+if (provider === 'mock') console.log('NOTE: mock judge is not a real evaluator - run with GEMINI_API_KEY for a meaningful result.');
 
 mkdirSync(join(HERE, 'out'), { recursive: true });
 writeFileSync(

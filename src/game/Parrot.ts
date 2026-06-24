@@ -9,7 +9,7 @@ import parrotUrl from '../../assets/Parrot.glb';
  *
  * Game-feel design:
  *  - real wing-flap comes from the model's baked animation, driven by an AnimationMixer;
- *  - movement is momentum-based (velocity eases toward input) — inertia, not gravity, which is the
+ *  - movement is momentum-based (velocity eases toward input) - inertia, not gravity, which is the
  *    right physics for a free-flight collectathon;
  *  - the body banks (rolls) into turns and bobs as it flies.
  *

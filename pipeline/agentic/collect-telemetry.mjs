@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Close the loop — turn real play into the north-star.
+ * Close the loop - turn real play into the north-star.
  *
  * The game emits window.__telemetry on every run (variant, score, pickups, duration). This plays
  * each VARIANT headless N times, reads that telemetry, and aggregates per-variant PERFORMANCE. That
  * flips the system's success metric from "asset rubric score" (does it look good?) to "which variant
- * actually performs in play?" — the data flywheel: production telemetry feeds back into which
+ * actually performs in play?" - the data flywheel: production telemetry feeds back into which
  * variant the generate->grade pipeline should make more of. Here it's local Playwright runs; in
  * production it's the ad-network's performance webhook landing in the same shape.
  *
@@ -36,7 +36,7 @@ for (const variant of VARIANTS) {
     await page.goto(`file://${join(ROOT, 'dist', 'index.html')}?variant=${variant}&test=fastend`, {
       waitUntil: 'load',
     });
-    // fast-end auto-plays then sets window.__telemetry on the end card — wait for it.
+    // fast-end auto-plays then sets window.__telemetry on the end card - wait for it.
     const t = await page
       .waitForFunction(() => window.__telemetry, null, { timeout: 8000 })
       .then((h) => h.jsonValue())

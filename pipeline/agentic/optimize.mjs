@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Sprite optimizer — the bridge from "raw AI art" to "game-ready sprite".
+ * Sprite optimizer - the bridge from "raw AI art" to "game-ready sprite".
  *
  * Plain-language: image models (DALL-E, Midjourney, gpt-image, etc.) output large images
  * (often 1024px, sometimes opaque, sometimes with messy margins). The game needs small, square,
