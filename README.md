@@ -126,16 +126,24 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 
 ---
 
-## ✅ Quality gates (all green in CI)
+## ✅ Testing & quality gates (every one runs in `npm run ci`, green on every push)
 
-| Gate | Proves |
-|---|---|
-| 🟢 unit tests | scoring & collision logic correct (11 tests) |
-| 🟢 asset gate | every sprite is a valid, transparent, in-budget PNG |
-| 🟣 provenance | each sprite is AI-generated (SHA-256 + generator), unaltered |
-| 🟢 build gate | the playable is one self-contained file, ≤5 MB, MRAID/CTA present |
-| 🔵 e2e (Playwright) | the built game loads, the loop runs, WebGL is healthy, CTA fires, + a gameplay screenshot |
-| 🔵🟢 visual QA | AI + deterministic check on a real gameplay screenshot (catches what functional tests can't) |
+Layered so each catches what the layer below can't: logic, then the real built artifact, then how it
+looks, then where it runs. Code measures everything measurable; the AI judge only adds taste.
+
+| Gate | Type | Proves |
+|---|---|---|
+| 🟢 unit tests | deterministic | scoring & collision logic correct (11 tests) |
+| 🟢 asset gate | deterministic | every sprite is a valid, transparent, in-budget PNG |
+| 🟣 provenance | deterministic | each sprite is AI-generated (SHA-256 + generator), unaltered |
+| 🟢 build gate | deterministic | the playable is one self-contained file, ≤5 MB, MRAID/CTA present |
+| 🔵 e2e (Playwright) | functional | built game loads, loop runs, WebGL healthy, CTA fires, perspective sane (6 tests) |
+| 📱 device-size QA | deterministic | renders on 6 placements (phone portrait/landscape, tablet): canvas fills, start reachable, no overflow |
+| 🔵🟢 visual QA | AI + deterministic | real-gameplay screenshot graded for sprites, seams, camera & perspective; deterministic pink/floor floor |
+| 🟣 golden eval | regression | guards the AI judge itself against drift (a model swap can't silently move the bar) |
+
+Functional tests + regression are also surfaced on the dashboard (per-case pass/fail) so non-technical
+stakeholders can see them re-run after every code change.
 
 ---
 
