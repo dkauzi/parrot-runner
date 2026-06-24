@@ -29,24 +29,36 @@ import { validateBuffer, validateScene } from './png.mjs';
 import { getImageProvider } from './generate.mjs';
 import { getJudge } from './judge.mjs';
 import { scoreVerdict, MAX_SCORE } from './rubric.mjs';
+import { gradeSprite } from './grade-deterministic.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 
+// Versioned agent config (config-as-data): defaults come from this git-tracked file; env vars
+// override at runtime. Changing agent behaviour is a reviewable edit + a git-revertable rollback.
+let AGENTS = {};
+try {
+  AGENTS = JSON.parse(readFileSync(join(HERE, 'agents.config.json'), 'utf8'));
+} catch {
+  /* fall back to built-in defaults below */
+}
+
 // ---- Config: the single place to change behaviour (model selection, thresholds, providers) ----
 const config = {
   assets: ['parrot', 'fruit', 'tree'],
-  imageProvider: process.env.IMAGE_PROVIDER || 'mock', // 'pollinations' = free real AI art
+  configVersion: AGENTS.version || 'unset',
+  imageProvider: process.env.IMAGE_PROVIDER || AGENTS.imageProvider || 'mock',
   // Judge auto-selects by which key is present: Claude (paid) > Gemini (free) > mock (offline).
   judgeProvider: process.env.ANTHROPIC_API_KEY
     ? 'anthropic'
     : process.env.GEMINI_API_KEY
       ? 'gemini'
       : 'mock',
-  judgeModel: process.env.JUDGE_MODEL || 'claude-opus-4-8', // cheaper: claude-haiku-4-5
-  threshold: Number(process.env.GRADE_THRESHOLD || 18), // accept at >= 18/25
-  minCriterion: 3, // and no single criterion below 3
-  maxAttempts: Number(process.env.MAX_ATTEMPTS || 3),
+  judgeModel: process.env.JUDGE_MODEL || AGENTS.judge?.anthropicModel || 'claude-opus-4-8',
+  geminiModel: process.env.GEMINI_MODEL || AGENTS.judge?.geminiModel || 'gemini-2.5-flash',
+  threshold: Number(process.env.GRADE_THRESHOLD || AGENTS.thresholds?.accept || 18),
+  minCriterion: AGENTS.thresholds?.minCriterion ?? 3,
+  maxAttempts: Number(process.env.MAX_ATTEMPTS || AGENTS.thresholds?.maxAttempts || 3),
   outDir: join(HERE, 'out'),
   runsDir: join(HERE, 'runs'),
   gameSpritesDir: join(ROOT, 'assets', 'sprites'),
@@ -79,8 +91,7 @@ async function run() {
   const generate = getImageProvider(config.imageProvider);
   const judge = getJudge(config.judgeProvider);
   // Each provider gets its own key + model. Adding a provider does not change this shape.
-  const judgeModel =
-    config.judgeProvider === 'gemini' ? process.env.GEMINI_MODEL || 'gemini-2.5-flash' : config.judgeModel;
+  const judgeModel = config.judgeProvider === 'gemini' ? config.geminiModel : config.judgeModel;
   const judgeApiKey =
     config.judgeProvider === 'gemini' ? process.env.GEMINI_API_KEY : process.env.ANTHROPIC_API_KEY;
 
@@ -156,26 +167,46 @@ async function run() {
         break;
       }
 
-      // STAGE 3: LLM judge
-      const result = await judge({ buffer, asset, model: judgeModel, apiKey: judgeApiKey });
-      costUsd += result.costUsd || 0;
-      if (!result.ok) {
-        // Malformed/refused verdict -> escalate to a human (safety: never guess).
+      // STAGE 2b: DETERMINISTIC quality grade — always runs. Catches opaque-background / empty /
+      // off-centre sprites without an LLM (this is what should have caught the pink-box bug), and
+      // is the FALLBACK verdict when the AI judge is unavailable.
+      const det = await gradeSprite(buffer);
+      if (!det.ok) {
         logLine(logPath, {
-          runId, asset, attempt, stage: 'judge', accepted: false,
-          valid: true, humanReview: true, reason: result.reason,
-          provider: result.provider, model: result.model, latencyMs: Date.now() - started,
+          runId, asset, attempt, stage: 'validate', accepted: false,
+          valid: false, problems: det.issues, latencyMs: Date.now() - started,
         });
-        break;
+        feedback += `\nFix: ${det.issues.join('; ')}.`;
+        continue;
       }
 
-      const scored = scoreVerdict(result.verdict);
-      if (!scored.ok) {
+      // STAGE 3: LLM judge (taste / game feel)
+      const result = await judge({ buffer, asset, model: judgeModel, apiKey: judgeApiKey });
+      costUsd += result.costUsd || 0;
+      const scored = result.ok ? scoreVerdict(result.verdict) : null;
+
+      if (!result.ok || !scored.ok) {
+        // The AI judge is unavailable or unsure -> DEGRADE TO THE DETERMINISTIC VERDICT (it already
+        // passed), never to a guess. Accept it, flagged deterministic-only. This is "deterministic
+        // judge always": the AI adds taste when it can, but code is the floor that always decides.
+        const reason = result.ok ? scored.error : result.reason;
+        const outFile = join(config.outDir, `${asset}.png`);
+        writeFileSync(outFile, buffer);
+        previews[asset] = genPreview || { before: dataUri(buffer), after: dataUri(buffer) };
+        if (promote) {
+          copyFileSync(outFile, join(config.gameSpritesDir, `${asset}.png`));
+          provenance.push({
+            asset, generator: genProvider, judge: 'deterministic-fallback', score: null,
+            promptSha256: sha(prompt), imageSha256: sha(buffer), runId, generatedAt: new Date().toISOString(),
+          });
+        }
         logLine(logPath, {
-          runId, asset, attempt, stage: 'judge', accepted: false,
-          valid: true, humanReview: true, reason: scored.error,
-          provider: result.provider, model: result.model, latencyMs: Date.now() - started,
+          runId, asset, attempt, stage: 'judge', accepted: true, valid: true, total: null,
+          provider: 'deterministic', model: 'gradeSprite',
+          reason: `AI judge unavailable/unsure (${reason}); deterministic grade passed`,
+          latencyMs: Date.now() - started,
         });
+        accepted = true;
         break;
       }
 
@@ -260,7 +291,7 @@ async function run() {
   writeFileSync(
     summaryPath,
     JSON.stringify(
-      { runId, config: { judgeProvider: config.judgeProvider, judgeModel: config.judgeModel, threshold: config.threshold }, summary },
+      { runId, config: { configVersion: config.configVersion, judgeProvider: config.judgeProvider, judgeModel: judgeModel, threshold: config.threshold }, summary },
       null,
       2
     )

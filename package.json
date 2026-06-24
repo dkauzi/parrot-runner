@@ -18,10 +18,12 @@
     "eval": "node pipeline/agentic/eval.mjs",
     "eval:visual": "node pipeline/agentic/visual-eval.mjs",
     "eval:visual:loop": "node pipeline/agentic/visual-fix-loop.mjs",
+    "capture:gif": "node pipeline/agentic/capture-gif.mjs",
     "build:pages": "npm run build:playable && npm run pipeline && npm run pipeline:dashboard && cp pipeline/agentic/dashboard.html dist/dashboard.html",
     "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e"
   },
   "dependencies": {
+    "gifenc": "^1.0.3",
     "jimp": "^1.6.1",
     "three": "^0.160.0"
   },

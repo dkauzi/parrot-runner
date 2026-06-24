@@ -1,8 +1,8 @@
 {
   "$schema": "./assets.schema.json",
   "sprites": {
-    "parrot": { "scale": 1.7, "aspect": 1.4 },
-    "fruit": { "scale": 0.95, "aspect": 1.0, "points": 10 },
-    "tree": { "scale": 3.2, "aspect": 0.55 }
+    "parrot": { "scale": 1.9, "aspect": 1.4 },
+    "fruit": { "scale": 1.15, "aspect": 1.0, "points": 10 },
+    "tree": { "scale": 5.5, "aspect": 0.6 }
   }
 }

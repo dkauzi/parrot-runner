@@ -90,6 +90,18 @@ try {
 } catch {
   /* none */
 }
+let gif = null;
+try {
+  gif = 'data:image/gif;base64,' + readFileSync(join(HERE, 'game.gif')).toString('base64');
+} catch {
+  /* none */
+}
+let agentCfg = null;
+try {
+  agentCfg = JSON.parse(readFileSync(join(HERE, 'agents.config.json'), 'utf8'));
+} catch {
+  /* none */
+}
 function collectSpecs(suite, out) {
   (suite.specs || []).forEach((s) => out.push(s));
   (suite.suites || []).forEach((su) => collectSpecs(su, out));
@@ -367,6 +379,22 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  <div class="sub" style="margin-bottom:10px">The core decision rule: <b>AI for judgment/creative tasks, plain code for deterministic ones.</b> Knowing where <i>not</i> to use AI is the point.</div>
  <table><thead><tr><th>Task</th><th>Handled by</th><th>Why</th></tr></thead><tbody>${aiRows}</tbody></table>
 
+ ${
+   agentCfg
+     ? `<h2>Agent config &amp; versions (rollback-ready)</h2>
+ <div class="sub" style="margin-bottom:10px">The agent <b>runtime</b> is separate from its <b>config</b>: behaviour is changed by editing one versioned file (<code>agents.config.json</code>) &mdash; a reviewable PR and a git-revertable rollback &mdash; not code. Prompt text is versioned as code in <code>prompts/*.md</code>, and each run records the version it used (audit).</div>
+ <table><tbody>
+  <tr><td><b>Config version</b></td><td>${agentCfg.version}</td></tr>
+  <tr><td><b>Owner</b></td><td>${agentCfg.owner}</td></tr>
+  <tr><td><b>Last audited</b></td><td>${agentCfg.lastAudited}</td></tr>
+  <tr><td><b>Image provider</b></td><td class="mono">${agentCfg.imageProvider}</td></tr>
+  <tr><td><b>Judge models</b></td><td class="mono">${agentCfg.judge?.geminiModel} (free) · ${agentCfg.judge?.anthropicModel} (premium)</td></tr>
+  <tr><td><b>Thresholds</b></td><td class="mono">accept ≥ ${agentCfg.thresholds?.accept}/25 · min criterion ${agentCfg.thresholds?.minCriterion} · max attempts ${agentCfg.thresholds?.maxAttempts}</td></tr>
+  <tr><td><b>Prompt versions</b></td><td class="mono">${Object.entries(agentCfg.prompts || {}).filter(([k]) => k !== '_comment').map(([k, v]) => `${k} ${v}`).join(' · ')}</td></tr>
+ </tbody></table>`
+     : ''
+ }
+
  <h2>Latest run</h2>
  <div class="cards">
   ${card('Auto-approval', approvalRate + '%', `${approved}/${allAssets.length} assets`)}
@@ -398,7 +426,7 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      ? `<h2>The end product &mdash; tests &amp; visual QA</h2>
  <div class="sub" style="margin-bottom:10px">Two checks on the actual built game: functional Playwright tests (does it load and run), and an AI <b>visual judge</b> that looks at a real gameplay screenshot (does it LOOK right) &mdash; catching what functional tests can't, like the sprite-background bug.</div>
  <div class="qa">
-  ${screenshot ? `<div class="shot"><img src="${screenshot}" alt="gameplay screenshot"/><div class="cap">live gameplay screenshot</div></div>` : ''}
+  ${gif ? `<div class="shot"><img src="${gif}" alt="gameplay"/><div class="cap">live gameplay (animated)</div></div>` : screenshot ? `<div class="shot"><img src="${screenshot}" alt="gameplay screenshot"/><div class="cap">live gameplay screenshot</div></div>` : ''}
   <div class="qatables">
    ${visual ? `<div class="vq ${visual.ok ? 'vqok' : 'vqbad'}">AI visual verdict: <b>${visual.ok ? 'looks good ✓' : 'issues found'}</b> (${visual.score}/5) &mdash; ${esc(visual.summary || '')}${visual.issues && visual.issues.length ? '<ul>' + visual.issues.map((i) => `<li>${esc(i)}</li>`).join('') + '</ul>' : ''}</div>` : ''}
    ${e2eRows ? `<table><thead><tr><th>Functional game test</th><th>Status</th></tr></thead><tbody>${e2eRows}</tbody></table>` : ''}

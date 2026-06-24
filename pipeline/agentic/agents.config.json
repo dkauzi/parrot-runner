@@ -1,0 +1,24 @@
+{
+  "_comment": "The agent runtime is separate from its CONFIG. Changing how the agents behave is an edit to THIS versioned file (a reviewable PR + a git-revertable rollback), not a code change. The pipeline reads these as defaults; environment variables override them at runtime (e.g. keys).",
+  "version": "1.2.0",
+  "owner": "dkauzi",
+  "lastAudited": "2026-06-24",
+  "imageProvider": "pollinations",
+  "judge": {
+    "preferred": "gemini",
+    "geminiModel": "gemini-2.5-flash",
+    "anthropicModel": "claude-opus-4-8"
+  },
+  "thresholds": {
+    "accept": 18,
+    "minCriterion": 3,
+    "maxAttempts": 3
+  },
+  "prompts": {
+    "_comment": "Prompt-as-code: the prompt TEXT lives in prompts/*.md (versioned, diffable). These are the version tags recorded with each run for audit + rollback.",
+    "fruit": "v0.2",
+    "tree": "v0.2",
+    "background": "v0.1",
+    "ground": "v0.1"
+  }
+}
