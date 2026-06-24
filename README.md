@@ -17,9 +17,11 @@ The pipeline is the point.
 
 ▶️ **Play it here :** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 
 
-📊 **Dashboard observability is build in from day 1:** 
+📊 **Dashboard 
 &nbsp;·&nbsp; 
 https://dkauzi.github.io/parrot-runner/dashboard.html
+
+observability is build in from day 1:** 
 
 ![Gameplay](pipeline/agentic/game.gif)
 
