@@ -1,4 +1,6 @@
-# 🦜 Parrot Runner — a playable and AI platform system that builds it tests it and validates it before publishing: later: collects and measure real-world ad performance for impovemnt. compares to rubric score" to "variant win-rate" — closing the loop from production back
+# 🦜 Parrot Runner — a playable and AI platform system that builds it tests it and validates it before publishing: 
+later: collects and measure real-world ad performance for impovemnt. compares to rubric score" to "variant win-rate" 
+— closing the loop from production back
 into generation. with Human in the loop for decisions: The data flywheel
 
 [![CI](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml/badge.svg)](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml)
@@ -7,10 +9,13 @@ into generation. with Human in the loop for decisions: The data flywheel
 ![assets](https://img.shields.io/badge/assets-AI%E2%80%91generated%20%2B%20verified-a371f7)
 
 A forward-flying parrot collecting fruit through a jungle — **built as a playable ad** — plus the
-**agentic AI pipeline that generates and quality-controls its art**. The game is the artefact; the
-pipeline is the point.
+**agentic AI pipeline that generates and quality-controls its art**. 
+The game is the artefact; 
+The pipeline is the point.
 
-▶️ **Play it:** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 📊 **Dashboard:** https://dkauzi.github.io/parrot-runner/dashboard.html
+▶️ **Play it here :** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 
+
+📊 **Dashboard observability is build in from day 1:** https://dkauzi.github.io/parrot-runner/dashboard.html
 
 ![Gameplay](pipeline/agentic/game.gif)
 
