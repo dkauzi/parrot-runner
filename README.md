@@ -3,6 +3,9 @@
 A forward-flying parrot collects fruit along a jungle path. Start, fly a fixed distance,
 end on a score card.
 
+see it in action here url: https://dkauzi.github.io/parrot-runner/   
+
+
 Built on `winstonrc/threejs-typescript-template` (webpack + TypeScript + Three.js).
 
 ## Run it
