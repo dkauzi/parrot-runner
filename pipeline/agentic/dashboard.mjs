@@ -422,6 +422,28 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  </div>
 </header>
 <main>
+ <h2>🔄 The data flywheel (the whole loop, top to bottom)</h2>
+ <div class="sub" style="margin-bottom:12px"><b>In plain words:</b> we make the art, check it, ship a version, watch how people actually play it, then make more of whatever plays best, and go round again. Each loop makes the next batch better. Every step is built and observable on this page.</div>
+ <div class="wheel">
+   ${[
+     ['📝', 'Prompt', 'versioned, like code', ''],
+     ['🎨', 'Make art', 'an AI paints the asset', 'ai'],
+     ['🟢', 'Check rules', 'format, transparent, sized', 'code'],
+     ['🔵', 'AI judges', 'scores it like a designer', 'ai'],
+     ['🔁', 'Fix & retry', 'feedback rewrites the prompt', ''],
+     ['🙋', 'Human if unsure', 'never a guess', 'human'],
+     ['🕹️', 'Ship variant', 'validated playable', 'play'],
+     ['🎯', 'Watch real play', 'CTR · installs · playtime', 'play'],
+     ['📊', 'Rank winners', 'by install rate', 'play'],
+   ]
+     .map(
+       (c, i) =>
+         `<div class="chip ${c[3]}"><div class="ce">${c[0]}</div><div class="ct">${c[1]}</div><div class="cc">${c[2]}</div></div>${i < 8 ? '<div class="warrow">→</div>' : ''}`
+     )
+     .join('')}
+ </div>
+ <div class="wback">↩ <b>Loop closes here:</b> the winning variant feeds straight back into <b>Make art</b>, generate more of what plays best. <span class="muted">Deterministic gates everywhere · AI only for judgment · human is the final judge · no guessing.</span></div>
+
  <h2>Brief requirements</h2>
  <table><thead><tr><th>Requirement</th><th>Status</th><th>Needed</th><th>Evidence</th></tr></thead><tbody>${reqRows}</tbody></table>
 
@@ -535,28 +557,6 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      : ''
  }
 
- <h2>🔄 The data flywheel (the whole loop)</h2>
- <div class="sub" style="margin-bottom:12px"><b>In plain words:</b> we make the art, check it, ship a version, watch how people actually play it, then make more of whatever plays best - and go round again. Each loop makes the next batch better. Every step below is built and observable on this page.</div>
- <div class="wheel">
-   ${[
-     ['📝', 'Prompt', 'versioned, like code', ''],
-     ['🎨', 'Make art', 'an AI paints the asset', 'ai'],
-     ['🟢', 'Check rules', 'format, transparent, sized', 'code'],
-     ['🔵', 'AI judges', 'scores it like a designer', 'ai'],
-     ['🔁', 'Fix & retry', 'feedback rewrites the prompt', ''],
-     ['🙋', 'Human if unsure', 'never a guess', 'human'],
-     ['🕹️', 'Ship variant', 'validated playable', 'play'],
-     ['🎯', 'Watch real play', 'score · pickups · camera', 'play'],
-     ['📊', 'Rank winners', 'by engagement', 'play'],
-   ]
-     .map(
-       (c, i) =>
-         `<div class="chip ${c[3]}"><div class="ce">${c[0]}</div><div class="ct">${c[1]}</div><div class="cc">${c[2]}</div></div>${i < 8 ? '<div class="warrow">→</div>' : ''}`
-     )
-     .join('')}
- </div>
- <div class="wback">↩ <b>Loop closes here:</b> the winning variant feeds straight back into <b>Make art</b> - generate more of what plays best. <span class="muted">Deterministic gates everywhere · AI only for judgment · human is the final judge · no guessing.</span></div>
-
  ${
    tests
      ? `<h2>✅ Functional tests &amp; regression (re-run on every code change)</h2>
@@ -572,12 +572,21 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  ${
    performance
      ? `<h2>🎯 Closing the loop - real-play performance (the north-star)</h2>
- <div class="sub" style="margin-bottom:10px">The asset rubric asks "does it look good?". This asks "which variant actually <b>performs in play</b>?". Each variant is run repeatedly; the game's <code>window.__telemetry</code> is aggregated into engagement. In production this same shape is fed by the ad-network's performance webhook - that's the data flywheel: real play feeds back into what the pipeline generates next. Metric: ${performance.metric}; ${performance.totalRuns} runs.</div>
- <table><thead><tr><th>Variant</th><th>Engagement</th><th>Share</th><th>Avg score</th><th>Avg pickups</th><th>Runs</th></tr></thead><tbody>
+ <div class="sub" style="margin-bottom:10px">The asset rubric asks "does it look good?". This asks "which variant actually <b>performs</b>?". ${
+   performance.realUsers
+     ? `These are <b>real-user ad KPIs</b> from the ad-network performance webhook feed (<span class="muted">simulated here, but the exact production shape</span>): click-through, install rate, playtime. The collector reads the webhook feed instead of local runs - the literal one-line swap - and ranks by <b>install rate</b>, the real-money north-star.`
+     : `Each variant is played repeatedly and the game's <code>window.__telemetry</code> is aggregated into an engagement proxy. Point the collector at the ad-network webhook to get real-user KPIs in these same panels.`
+ } Source: ${performance.source}. ${performance.totalSessions} sessions.</div>
+ <table><thead><tr>${
+   performance.realUsers
+     ? `<th>Variant</th><th>Install rate</th><th>CTR</th><th>Avg playtime</th><th>Sessions</th>`
+     : `<th>Variant</th><th>Engagement</th><th>Share</th><th>Avg score</th><th>Sessions</th>`
+ }</tr></thead><tbody>
    ${performance.perVariant
-     .map(
-       (v) =>
-         `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.engagement}</b></td><td>${v.winSharePct}%</td><td>${v.avgScore}</td><td>${v.avgPickups}</td><td>${v.runs}</td></tr>`
+     .map((v) =>
+       performance.realUsers
+         ? `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.installRatePct}%</b></td><td>${v.ctrPct}%</td><td>${v.avgPlaytimeS}s</td><td>${v.sessions}</td></tr>`
+         : `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.engagement}</b></td><td>${v.winSharePct}%</td><td>${v.avgScore}</td><td>${v.sessions}</td></tr>`
      )
      .join('')}
  </tbody></table>
@@ -609,11 +618,11 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
   <p><b>The whole loop is built and closed on this page:</b> internal quality (the rubric), correctness
   (the gates), and real-play performance (the telemetry collector ranks variants by engagement and the
   champion/challenger selector recommends what to promote).</p>
-  <p>The one input still <b>synthetic</b> is <i>who</i> plays: engagement comes from automated Playwright
-  runs, not real users, so it can't yet see true ad performance (click-through, install rate, playtime).
-  The game emits <code>window.__telemetry</code> (variant, pickups, score, duration) and the collector
-  already consumes exactly that shape, so going live is a <b>one-line swap</b>: point the collector at the
-  ad network's performance webhook instead of local runs. Same shape, real users, same panels.</p>
+  <p>The collector takes sessions from <b>anyone who plays</b> through one pipe: a real user via the ad
+  network's performance webhook, or a Playwright run, both in the same <code>window.__telemetry</code>
+  shape (variant, clicked, installed, playtime). The only thing <b>simulated</b> right now is the volume
+  of real users, the webhook feed here is synthetic. Going fully live is a <b>one-line swap</b>: point the
+  collector at the production webhook URL. Same shape, same panels, real money KPIs.</p>
  </div>
 </main></body></html>`;
 

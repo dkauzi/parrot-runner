@@ -25,7 +25,8 @@
     "seamless": "node pipeline/agentic/make-seamless.mjs",
     "telemetry": "node pipeline/agentic/collect-telemetry.mjs",
     "tests:report": "node pipeline/agentic/generate-tests-report.mjs",
-    "dashboard:refresh": "npm run build:playable && IMAGE_PROVIDER=mock npm run pipeline && npm run test:e2e && node pipeline/agentic/generate-tests-report.mjs && node pipeline/agentic/collect-telemetry.mjs --n 3 && node pipeline/agentic/shadow.mjs --asset fruit --n 3 && node pipeline/agentic/visual-eval.mjs; node pipeline/agentic/capture-gif.mjs && node pipeline/agentic/dashboard.mjs"
+    "dashboard:refresh": "npm run build:playable && (IMAGE_PROVIDER=pollinations npm run pipeline || true) && npm run test:e2e && node pipeline/agentic/generate-tests-report.mjs && node pipeline/agentic/simulate-webhook.mjs && node pipeline/agentic/collect-telemetry.mjs --source webhook && node pipeline/agentic/shadow.mjs --asset fruit --n 3 && node pipeline/agentic/visual-eval.mjs; node pipeline/agentic/capture-gif.mjs && node pipeline/agentic/dashboard.mjs",
+    "simulate:webhook": "node pipeline/agentic/simulate-webhook.mjs"
   },
   "dependencies": {
     "gifenc": "^1.0.3",
