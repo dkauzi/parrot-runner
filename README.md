@@ -35,9 +35,8 @@ npm run ci             # unit tests -> asset gate -> build -> build gate -> head
 ```
 
 **On GitHub:** pushing to `main` runs the CI workflow (`.github/workflows/ci.yml`) and, once
-Pages is enabled (Settings -> Pages -> Source: GitHub Actions), publishes the playable to
-`https://dkauzi.github.io/parrot-runner/`. Pages serves publicly, so a private repo needs
-GitHub Pro or to be made public for the live URL; otherwise run locally as above.
+ publishes the playable to
+`https://dkauzi.github.io/parrot-runner/`
 
 ## Why this build is shaped the way it is
 
