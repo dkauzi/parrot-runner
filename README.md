@@ -1,4 +1,5 @@
-# 🦜 Parrot Runner — an AI-built playable, and the AI system that builds it
+# 🦜 Parrot Runner — a playable and AI platform system that builds it tests it and validates it before publishing: later: collects and measure real-world ad performance for impovemnt. compares to rubric score" to "variant win-rate" — closing the loop from production back
+into generation. The data flywheel
 
 [![CI](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml/badge.svg)](https://github.com/dkauzi/parrot-runner/actions/workflows/main.yml)
 [![Pages](https://github.com/dkauzi/parrot-runner/actions/workflows/pages.yml/badge.svg)](https://dkauzi.github.io/parrot-runner/)
