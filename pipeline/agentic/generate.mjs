@@ -83,21 +83,30 @@ export async function pollinationsGenerate(asset, prompt, attempt) {
   // "Before" thumbnail: the raw AI output, on its magenta background, prior to any processing.
   const before = await thumb(img.clone());
 
-  // Soft chroma-key with edge despill: fully cut strong magenta, fade the fringe, and pull the
-  // purple tint out of edge pixels so there's no halo — much cleaner than a hard threshold.
+  // ADAPTIVE chroma-key: sample the 4 corners to learn the ACTUAL background colour the image
+  // model produced (it rarely hits pure #FF00FF), then key out everything close to it. This is far
+  // more robust than a fixed magenta threshold — it handles pink/magenta/white/grey backgrounds.
   const d = img.bitmap.data;
+  const W = img.bitmap.width;
+  const H = img.bitmap.height;
+  const corners = [0, (W - 1) * 4, (H - 1) * W * 4, ((H - 1) * W + (W - 1)) * 4];
+  let br = 0;
+  let bg = 0;
+  let bb = 0;
+  for (const c of corners) {
+    br += d[c];
+    bg += d[c + 1];
+    bb += d[c + 2];
+  }
+  br /= 4;
+  bg /= 4;
+  bb /= 4;
   for (let i = 0; i < d.length; i += 4) {
-    const r = d[i];
-    const g = d[i + 1];
-    const b = d[i + 2];
-    const magenta = Math.min(r, b) - g; // > 0 when magenta dominates green
-    if (magenta > 80) {
-      d[i + 3] = 0; // clearly background
-    } else if (magenta > 25) {
-      const t = (magenta - 25) / 55; // 0..1 across the fringe
-      d[i + 3] = Math.round(d[i + 3] * (1 - t)); // fade out
-      d[i] = Math.round(r - (r - g) * t * 0.8); // despill red
-      d[i + 2] = Math.round(b - (b - g) * t * 0.8); // despill blue
+    const dist = Math.abs(d[i] - br) + Math.abs(d[i + 1] - bg) + Math.abs(d[i + 2] - bb);
+    if (dist < 70) {
+      d[i + 3] = 0; // background
+    } else if (dist < 130) {
+      d[i + 3] = Math.round(d[i + 3] * ((dist - 70) / 60)); // soft edge
     }
   }
   img.autocrop(); // trim the now-transparent border

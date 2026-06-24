@@ -9,6 +9,7 @@ import {
   PlaneGeometry,
   RepeatWrapping,
   Scene,
+  Texture,
   TextureLoader,
   Vector3,
   WebGLRenderer,
@@ -36,6 +37,11 @@ type State = 'menu' | 'playing' | 'gameover';
 
 const PICKUP_REACH = 1.2;
 const FOG_COLOR = 0x9ed27a;
+// The bird flies forward through a FIXED world (like a race car on a track). The camera + bird move
+// in -z; the ground follows the camera so it reads as a stable floor while trees/fruit pass.
+const CAM_Z0 = 8.5; // camera's starting z
+const PARROT_Z0 = 3; // bird's starting z (5.5 in front of the camera)
+const GROUND_AHEAD = 100; // how far ahead of the camera the floor plane is centred
 
 export class Game {
   private renderer: WebGLRenderer;
@@ -59,6 +65,8 @@ export class Game {
   private fpsTimer = 0;
   private shakeT = 0;
   private camBase: Vector3;
+  private ground!: Mesh;
+  private groundTex: Texture | null = null;
   private startMs = 0;
   private frames = 0;
 
@@ -70,8 +78,9 @@ export class Game {
     this.renderer = new WebGLRenderer({
       antialias: true,
       alpha: true,
+      preserveDrawingBuffer: true, // lets tests + visual QA screenshot the WebGL canvas
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // protect FPS on retina
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // cap framebuffer for FPS
     this.renderer.setClearColor(0x000000, 0);
     root.appendChild(this.renderer.domElement);
 
@@ -98,6 +107,8 @@ export class Game {
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.4, -100);
     this.scene.add(ground);
+    this.ground = ground;
+    this.groundTex = groundTex;
 
     this.camera = new PerspectiveCamera(55, 1, 0.1, 100);
     this.camera.position.set(0, 2.6, 8.5);
@@ -115,6 +126,7 @@ export class Game {
       s.tree,
       config
     );
+    this.spawner.prepopulate(PARROT_Z0); // populate the path for the attract/menu screen
 
     this.input = new Input(root);
     this.ui = new UI(root, config.title);
@@ -141,6 +153,7 @@ export class Game {
     unlockAudio();
     startChime();
     this.spawner.reset();
+    this.spawner.prepopulate(PARROT_Z0); // fresh populated path at the start of the run
     this.parrot.reset();
     this.score = 0;
     this.pickups = 0;
@@ -178,26 +191,39 @@ export class Game {
 
   private tick(): void {
     const delta = Math.min(this.clock.getDelta(), 0.05); // clamp huge frames (tab refocus)
+    const playing = this.state === 'playing';
 
-    this.spawner.update(delta); // keep the world alive on menu + end screens too
-
-    if (this.state === 'playing') {
-      this.parrot.update(delta, this.input.getAxis());
+    this.parrot.update(delta, playing ? this.input.getAxis() : { x: 0, y: 0 });
+    if (playing) {
       this.elapsed += delta;
-      this.distance += this.config.scrollSpeed * delta;
+      this.distance += this.config.scrollSpeed * delta; // bird advances forward
+    }
+
+    // Fly the bird + camera forward through the FIXED world; the floor follows the camera.
+    const camZ = CAM_Z0 - this.distance;
+    const parrotZ = PARROT_Z0 - this.distance;
+    this.parrot.position.z = parrotZ;
+    // Floor plane follows the camera so it always covers the view, BUT its texture offset is tied
+    // to forward distance — so the ground rushes UNDER you (world-fixed look) = the sense of speed.
+    this.ground.position.z = camZ - GROUND_AHEAD;
+    if (this.groundTex) this.groundTex.offset.y = this.distance * 0.125;
+    this.camBase.set(0, 2.6, camZ);
+
+    const move = playing ? this.config.scrollSpeed * delta : 0;
+    this.spawner.update(delta, move, parrotZ);
+
+    if (playing) {
       this.ui.setProgress(runProgress(this.distance, this.config.runDistance));
       this.handlePickups();
-      // Fast-end uses wall-clock so automated runs finish in a fixed time regardless of FPS.
       const done = this.fastEnd
         ? performance.now() - this.startMs > 1500
         : isRunComplete(this.distance, this.config.runDistance);
       if (done) this.end();
-    } else {
-      this.parrot.update(delta, { x: 0, y: 0 }); // idle bob on menu/end
     }
 
     this.updateFps(delta);
-    this.applyShake(delta);
+    this.applyShake(delta); // positions the camera from camBase (+ shake)
+    this.camera.lookAt(this.parrot.position.x * 0.2, 1.8, camZ - 6); // look down the path
     this.renderer.render(this.scene, this.camera);
 
     // Heartbeat for the headless test: proves the real game loop is advancing (cheaper and more

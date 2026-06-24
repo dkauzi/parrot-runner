@@ -14,7 +14,8 @@ export default defineConfig({
   // The rigged 3D parrot renders far slower under software-GL (CI) than on a real GPU, so give each
   // test generous headroom; the loop is verified by the game's own frame counter, not wall-clock FPS.
   timeout: 90000,
-  reporter: 'list',
+  // JSON results feed the dashboard's "Game tests" panel; list reporter for the console.
+  reporter: [['list'], ['json', { outputFile: 'pipeline/agentic/out/e2e-results.json' }]],
   use: {
     headless: true,
     // Software GL so WebGL renders in CI, plus flags to stop headless from throttling the loop.

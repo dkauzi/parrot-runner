@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
+import { mkdirSync } from 'node:fs';
 
 /**
  * Headless auto-test for the built single-file playable (Layer 3, automated).
@@ -37,6 +38,16 @@ test.afterEach(async ({ page }) => {
   // Stop the render loop before the context tears down — software-GL teardown can hang while a
   // heavy WebGL loop is still running. Best-effort; ignore if the page is already gone.
   await page.evaluate(() => (window as { __stopLoop?: () => void }).__stopLoop?.()).catch(() => {});
+});
+
+test('captures a gameplay screenshot (visual artifact)', async ({ page }) => {
+  // Play a moment and snapshot the running game, so every test run leaves a visual artifact the
+  // dashboard can show — and a real reviewer (or the AI visual judge) can eyeball regressions like
+  // the sprite-transparency bug that functional tests can't see.
+  await page.goto(`${URL}?test=fastend`, { waitUntil: 'load' });
+  await page.waitForTimeout(900); // let a few frames render
+  mkdirSync('pipeline/agentic/out', { recursive: true });
+  await page.screenshot({ path: 'pipeline/agentic/out/game-screenshot.png' });
 });
 
 test('loads with no console or page errors', async ({ page }) => {

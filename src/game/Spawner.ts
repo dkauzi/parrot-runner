@@ -17,13 +17,13 @@ import { SpriteSpec } from './assets';
  * Collected fruit play a brief "pop" (scale up + fade) before returning to the pool.
  */
 
-const SPAWN_Z = -40; // where objects appear (far, fades in through fog)
-const RECYCLE_Z = 8; // behind the camera -> recycle
+const SPAWN_AHEAD = 48; // how far ahead of the bird new objects appear (fade in through fog)
+const BEHIND_MARGIN = 8; // recycle once an object is this far behind the bird/camera
 const POP_TIME = 0.22;
 const FRUIT_POOL = 28;
 const TREE_POOL = 18;
 const FLOOR_Y = -0.4; // matches the scrolling ground plane in Game.ts (trees stand on it)
-const TREE_X = 4.2; // consistent roadside distance — trees line the route like freeway lamp posts
+const TREE_X = 6.5; // well outside the fruit lane — trees are roadside scenery, not in your path
 
 interface Item {
   sprite: Sprite;
@@ -91,14 +91,17 @@ export class Spawner {
     return { mesh, halfHeight: h / 2 };
   }
 
-  /** Advance the world one frame. */
-  update(delta: number): void {
-    const move = this.config.scrollSpeed * delta;
+  /**
+   * Advance one frame. The WORLD is fixed (objects don't move); the bird flies forward through it,
+   * so we recycle objects once they fall behind the bird (`frontZ`) and spawn new ones ahead.
+   * `move` is the forward distance travelled this frame (drives spawn cadence).
+   */
+  update(delta: number, move: number, frontZ: number): void {
     this.time += delta;
+    const behind = frontZ + BEHIND_MARGIN;
 
     for (const it of this.fruit) {
       if (!it.sprite.visible) continue;
-      it.sprite.position.z += move;
       if (it.collected) {
         it.popT -= delta;
         const t = Math.max(0, it.popT) / POP_TIME;
@@ -106,7 +109,7 @@ export class Spawner {
         it.sprite.scale.set(it.baseScaleX * grow, it.baseScaleY * grow, 1);
         (it.sprite.material as SpriteMaterial).opacity = t;
         if (it.popT <= 0) this.retire(it);
-      } else if (it.sprite.position.z > RECYCLE_Z) {
+      } else if (it.sprite.position.z > behind) {
         this.retire(it);
       } else {
         // Alive: gentle bob around the resting height + a slow spin, so fruit feels collectible.
@@ -116,22 +119,27 @@ export class Spawner {
     }
     for (const t of this.trees) {
       if (!t.mesh.visible) continue;
-      t.mesh.position.z += move;
-      if (t.mesh.position.z > RECYCLE_Z) t.mesh.visible = false;
+      if (t.mesh.position.z > behind) t.mesh.visible = false; // fixed in world; bird passed it
     }
 
-    // Spawn ahead based on distance travelled.
+    // Spawn ahead of the bird as it advances.
     this.sinceFruit += move;
     if (this.sinceFruit >= jitter(this.config.fruitGap)) {
       this.sinceFruit = 0;
-      this.spawnFruit();
+      this.spawnFruit(frontZ - SPAWN_AHEAD);
     }
     this.sinceTree += move;
     if (this.sinceTree >= this.config.treeGap) {
       // Even spacing (no jitter) so trees pass at a steady rhythm, like roadside lamp posts.
       this.sinceTree = 0;
-      this.spawnTree();
+      this.spawnTree(frontZ - SPAWN_AHEAD);
     }
+  }
+
+  /** Fill the path ahead so the menu and the start of a run show a populated scene. */
+  prepopulate(frontZ: number): void {
+    for (let z = frontZ - 8; z > frontZ - SPAWN_AHEAD - 16; z -= this.config.fruitGap) this.spawnFruit(z);
+    for (let z = frontZ - 10; z > frontZ - SPAWN_AHEAD - 16; z -= this.config.treeGap) this.spawnTree(z);
   }
 
   private retire(it: Item): void {
@@ -141,7 +149,7 @@ export class Spawner {
     (it.sprite.material as SpriteMaterial).opacity = 1;
   }
 
-  private spawnFruit(): void {
+  private spawnFruit(z: number): void {
     const it = this.fruit.find((f) => !f.sprite.visible);
     if (!it) return;
     it.collected = false;
@@ -155,18 +163,18 @@ export class Spawner {
     mat.opacity = 1;
     mat.rotation = 0;
     it.sprite.scale.set(it.baseScaleX, it.baseScaleY, 1);
-    it.sprite.position.set(rand(-2.4, 2.4), it.baseY, SPAWN_Z);
+    it.sprite.position.set(rand(-2.4, 2.4), it.baseY, z);
     it.sprite.visible = true;
   }
 
-  private spawnTree(): void {
+  private spawnTree(z: number): void {
     const t = this.trees.find((tr) => !tr.mesh.visible);
     if (!t) return;
     // Lined along the route at a consistent roadside distance, alternating sides (lamp-post rows).
     const x = this.treeSide * (TREE_X + rand(-0.3, 0.5));
     this.treeSide *= -1;
-    // Grounded: the base of the tree sits on the scrolling floor, so it reads as a fixed prop.
-    t.mesh.position.set(x, FLOOR_Y + t.halfHeight, SPAWN_Z);
+    // Grounded and FIXED in the world — the bird flies past it; it does not move.
+    t.mesh.position.set(x, FLOOR_Y + t.halfHeight, z);
     t.mesh.visible = true;
   }
 

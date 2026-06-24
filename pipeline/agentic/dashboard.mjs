@@ -71,6 +71,35 @@ const goldenRows = golden
       .join('')
   : '';
 
+// Game tests (Playwright JSON), live gameplay screenshot, and the AI visual-QA verdict.
+let e2e = null;
+let visual = null;
+let screenshot = null;
+try {
+  e2e = JSON.parse(readFileSync(join(HERE, 'out', 'e2e-results.json'), 'utf8'));
+} catch {
+  /* not run */
+}
+try {
+  visual = JSON.parse(readFileSync(join(HERE, 'out', 'visual-eval.json'), 'utf8'));
+} catch {
+  /* not run */
+}
+try {
+  screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
+} catch {
+  /* none */
+}
+function collectSpecs(suite, out) {
+  (suite.specs || []).forEach((s) => out.push(s));
+  (suite.suites || []).forEach((su) => collectSpecs(su, out));
+  return out;
+}
+const specs = e2e ? (e2e.suites || []).flatMap((su) => collectSpecs(su, [])) : [];
+const e2eRows = specs
+  .map((s) => `<tr><td>${s.title}</td><td>${s.ok ? '<span class="ok">pass ✓</span>' : '<span class="warn">fail</span>'}</td></tr>`)
+  .join('');
+
 // Provenance: re-fingerprint each committed sprite and compare to its recorded generation hash.
 let provenance = {};
 try {
@@ -310,6 +339,13 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  .pv img.alpha{background-image:linear-gradient(45deg,#2a2a2a 25%,transparent 25%),linear-gradient(-45deg,#2a2a2a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2a2a2a 75%),linear-gradient(-45deg,transparent 75%,#2a2a2a 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0}
  .parrow{color:#3fb950;font-size:22px}
  .aiyes{color:#a371f7;font-weight:700} .aino{color:#58a6ff;font-weight:700}
+ .qa{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+ .shot img{max-width:380px;width:100%;border-radius:8px;border:1px solid #30363d;display:block}
+ .shot .cap{font-size:12px;color:#8b949e;margin-top:4px;text-align:center}
+ .qatables{flex:1;min-width:280px}
+ .vq{padding:10px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
+ .vqok{background:#0f2a16;border:1px solid #238636} .vqbad{background:#2a1212;border:1px solid #9e3a3a}
+ .vq ul{margin:6px 0 0 16px}
  .blind{margin-top:26px;background:#1c1209;border:1px solid #9e6a03;border-radius:10px;padding:16px 18px}
  .blind h3{margin:0 0 6px;color:#e3b341;font-size:15px} .blind p{margin:6px 0;color:#d8c08a;font-size:13px}
  code{background:#21262d;padding:1px 5px;border-radius:4px}
@@ -354,6 +390,20 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  <div class="sub" style="margin-bottom:10px">The judge is an LLM, so it can drift (a model swap silently moves the quality bar). A <b>golden set</b> of labeled cases &mdash; real good sprites that must pass, plus a deliberately bad image that must be rejected &mdash; checks the judge's agreement with known-correct verdicts. A drop in agreement means the <i>evaluator</i> regressed, caught here before it corrupts future grades.</div>
  <div class="cards"><div class="card"><div class="v">${golden.agreement}%</div><div class="l">judge agreement</div><div class="h">${golden.provider}:${golden.model}</div></div></div>
  <table style="margin-top:12px"><thead><tr><th>Golden case</th><th>Expected</th><th>Judge said</th><th>Match</th></tr></thead><tbody>${goldenRows}</tbody></table>`
+     : ''
+ }
+
+ ${
+   screenshot || e2eRows || visual
+     ? `<h2>The end product &mdash; tests &amp; visual QA</h2>
+ <div class="sub" style="margin-bottom:10px">Two checks on the actual built game: functional Playwright tests (does it load and run), and an AI <b>visual judge</b> that looks at a real gameplay screenshot (does it LOOK right) &mdash; catching what functional tests can't, like the sprite-background bug.</div>
+ <div class="qa">
+  ${screenshot ? `<div class="shot"><img src="${screenshot}" alt="gameplay screenshot"/><div class="cap">live gameplay screenshot</div></div>` : ''}
+  <div class="qatables">
+   ${visual ? `<div class="vq ${visual.ok ? 'vqok' : 'vqbad'}">AI visual verdict: <b>${visual.ok ? 'looks good ✓' : 'issues found'}</b> (${visual.score}/5) &mdash; ${esc(visual.summary || '')}${visual.issues && visual.issues.length ? '<ul>' + visual.issues.map((i) => `<li>${esc(i)}</li>`).join('') + '</ul>' : ''}</div>` : ''}
+   ${e2eRows ? `<table><thead><tr><th>Functional game test</th><th>Status</th></tr></thead><tbody>${e2eRows}</tbody></table>` : ''}
+  </div>
+ </div>`
      : ''
  }
 

@@ -16,6 +16,8 @@
     "pipeline:optimize": "node pipeline/agentic/optimize.mjs",
     "pipeline:dashboard": "node pipeline/agentic/dashboard.mjs",
     "eval": "node pipeline/agentic/eval.mjs",
+    "eval:visual": "node pipeline/agentic/visual-eval.mjs",
+    "eval:visual:loop": "node pipeline/agentic/visual-fix-loop.mjs",
     "build:pages": "npm run build:playable && npm run pipeline && npm run pipeline:dashboard && cp pipeline/agentic/dashboard.html dist/dashboard.html",
     "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e"
   },
