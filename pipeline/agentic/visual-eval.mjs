@@ -75,8 +75,10 @@ if (key) {
     '(no coloured background boxes)? Any visible texture SEAMS or mirrored tiling on the ground? ' +
     'Stray pink/magenta blotches? Floating or wrongly-scaled objects? And the CAMERA/play view: is ' +
     'the bird well-framed with a clear view of the path ahead (good to play), not staring at the floor ' +
-    'or too high/low? Be harsh: 5 = flawless. Also return "camera": "good"|"poor" with a reason. ' +
-    'Respond ONLY JSON: {"score": <integer 1-5>, "issues": ["..."], "camera": "good|poor", "summary": "<one sentence>"}.';
+    'or too high/low? And PERSPECTIVE/depth: does the scene read as proper 3D (near objects larger ' +
+    'than far, a clear sense of distance), with no fisheye distortion and nothing stretched or flat? ' +
+    'Be harsh: 5 = flawless. Also return "camera" and "perspective" as "good"|"poor". ' +
+    'Respond ONLY JSON: {"score": <integer 1-5>, "issues": ["..."], "camera": "good|poor", "perspective": "good|poor", "summary": "<one sentence>"}.';
   const body = {
     contents: [{ parts: [{ inline_data: { mime_type: 'image/png', data: shot.toString('base64') } }, { text: prompt }] }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0 },

@@ -283,5 +283,12 @@ export class Game {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+    // Expose the projection so tests can assert perspective is correct (FOV sane, and the camera
+    // aspect matches the canvas aspect — otherwise the 3D world renders stretched/squashed).
+    (window as unknown as { __view: unknown }).__view = {
+      fov: this.camera.fov,
+      aspect: this.camera.aspect,
+      canvasAspect: w / h,
+    };
   }
 }

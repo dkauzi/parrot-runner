@@ -83,6 +83,18 @@ test('WebGL context is healthy (actually rendering)', async ({ page }) => {
   expect(healthy).toBe(true);
 });
 
+test('perspective/projection is correct (sane FOV, no stretch)', async ({ page }) => {
+  // Perspective != camera pose. This checks the LENS: the field-of-view is in a sane range (not a
+  // fisheye or a flat, depth-less view) and the camera aspect matches the canvas, so the 3D world
+  // is never rendered stretched or squashed. Deterministic — a code invariant, not screenshot-guessing.
+  await page.goto(URL, { waitUntil: 'load' });
+  const v = await page.evaluate(() => (window as any).__view);
+  expect(v, 'game should expose window.__view').toBeTruthy();
+  expect(v.fov).toBeGreaterThanOrEqual(35);
+  expect(v.fov).toBeLessThanOrEqual(80);
+  expect(Math.abs(v.aspect - v.canvasAspect)).toBeLessThan(0.02);
+});
+
 test('CTA fires through mraid.open at game end', async ({ page }) => {
   // Requires the game to honour a fast-end test hook and to call window.mraid.open(url) on the
   // end-card CTA. Skip cleanly until that hook exists so the suite stays green during build-out.
