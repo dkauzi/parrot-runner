@@ -121,12 +121,20 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 
 ---
 
-## 🔭 What's not built yet (honest, and the next step)
+## 🎯 The closed loop (the data flywheel)
 
-The dashboard measures **internal quality**, not **real-world ad performance** (CTR, install rate,
-playtime). Every asset is already a logged record, so feeding the ad network's performance webhook in
-flips the north-star from "rubric score" to "variant win-rate" — closing the loop from production back
-into generation. That's the data flywheel; this is its first half. The game already emits a
-`window.__telemetry` hook as the seed.
+The rubric measures *"does the asset look good?"*. The real north-star is *"which variant **performs in
+play**?"*. The game emits `window.__telemetry` (variant, score, pickups, duration) every run;
+`collect-telemetry.mjs` aggregates it **per variant** into an engagement score, and the dashboard's
+**"Closing the loop"** panel ranks them and recommends *which variant to generate more of*. Locally
+that's Playwright runs; in production the **same shape** is fed by the ad-network's performance
+webhook — so production play feeds straight back into what the pipeline generates next.
+
+```
+generate ─▶ grade ─▶ ship variant ─▶ 🎯 real-play telemetry ─▶ rank ─▶ generate more of the winner
+                                          (closes here)
+```
+
+Run it: `npm run telemetry` &nbsp;then&nbsp; `npm run pipeline:dashboard`.
 
 See `AGENTIC.md` (pipeline deep-dive), `ARCHITECTURE.md`, `REQUIREMENTS.md` (assignment compliance).

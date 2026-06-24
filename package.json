@@ -22,7 +22,8 @@
     "build:pages": "npm run build:playable && npm run pipeline && npm run pipeline:dashboard && cp pipeline/agentic/dashboard.html dist/dashboard.html",
     "ci": "npm run test:unit && npm run validate:assets && npm run verify:provenance && npm run build:playable && npm run validate:build && npm run test:e2e",
     "shadow": "node pipeline/agentic/shadow.mjs",
-    "seamless": "node pipeline/agentic/make-seamless.mjs"
+    "seamless": "node pipeline/agentic/make-seamless.mjs",
+    "telemetry": "node pipeline/agentic/collect-telemetry.mjs"
   },
   "dependencies": {
     "gifenc": "^1.0.3",

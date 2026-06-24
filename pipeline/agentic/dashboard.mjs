@@ -91,6 +91,12 @@ try {
 } catch {
   /* not run */
 }
+let performance = null;
+try {
+  performance = JSON.parse(readFileSync(join(HERE, 'out', 'performance.json'), 'utf8'));
+} catch {
+  /* not run */
+}
 try {
   screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
 } catch {
@@ -489,6 +495,22 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      ? `<h2>Operational insights &mdash; what caused the most rework</h2>
  <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> &mdash; where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped &mdash; fail loud, not silent.)</div>
  <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>`
+     : ''
+ }
+
+ ${
+   performance
+     ? `<h2>🎯 Closing the loop &mdash; real-play performance (the north-star)</h2>
+ <div class="sub" style="margin-bottom:10px">The asset rubric asks "does it look good?". This asks "which variant actually <b>performs in play</b>?". Each variant is run repeatedly; the game's <code>window.__telemetry</code> is aggregated into engagement. In production this same shape is fed by the ad-network's performance webhook &mdash; that's the data flywheel: real play feeds back into what the pipeline generates next. Metric: ${performance.metric}; ${performance.totalRuns} runs.</div>
+ <table><thead><tr><th>Variant</th><th>Engagement</th><th>Share</th><th>Avg score</th><th>Avg pickups</th><th>Runs</th></tr></thead><tbody>
+   ${performance.perVariant
+     .map(
+       (v) =>
+         `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.engagement}</b></td><td>${v.winSharePct}%</td><td>${v.avgScore}</td><td>${v.avgPickups}</td><td>${v.runs}</td></tr>`
+     )
+     .join('')}
+ </tbody></table>
+ <div class="sub" style="margin-top:8px"><b>Recommendation:</b> ${performance.recommendation}</div>`
      : ''
  }
 
