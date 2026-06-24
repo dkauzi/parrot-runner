@@ -2,32 +2,32 @@
   "parrot": {
     "asset": "parrot",
     "generator": "pollinations",
-    "judge": "gemini:gemini-2.5-flash",
-    "score": 23,
+    "judge": "mock:mock",
+    "score": 20,
     "promptSha256": "3f2d2960e19c79d556c6c650f2a40d7ceea7308151b5145385d6c39a78db2a80",
-    "imageSha256": "736a904d5638f59b79dce3596aef0e3b0c2447c1506b402a8ef5c6f8d4c0b759",
-    "runId": "2026-06-24T05-32-03-543Z",
-    "generatedAt": "2026-06-24T05:32:11.372Z"
+    "imageSha256": "2f61201b3fb8346fda994ea522dc1310d7990459fa142a76af1c429ac40ddbb1",
+    "runId": "2026-06-24T19-16-09-415Z",
+    "generatedAt": "2026-06-24T19:16:11.176Z"
   },
   "fruit": {
     "asset": "fruit",
     "generator": "pollinations",
-    "judge": "gemini:gemini-2.5-flash",
-    "score": 22,
+    "judge": "mock:mock",
+    "score": 21,
     "promptSha256": "749695dbb1ce7d5ae854d3b891b13ff2d14fbf58d2b92531daf4180b876c9628",
-    "imageSha256": "f476a87a1bbfbc5b53f94c99f28a9cae6f039c8b694c2eb3b96877fb94be6657",
-    "runId": "2026-06-24T09-09-40-680Z",
-    "generatedAt": "2026-06-24T09:09:57.382Z"
+    "imageSha256": "f826f13544eb24754910b799cb0bbc776b21579c06b0ea5bb73a12764d619449",
+    "runId": "2026-06-24T19-16-09-415Z",
+    "generatedAt": "2026-06-24T19:16:11.849Z"
   },
   "tree": {
     "asset": "tree",
     "generator": "pollinations",
     "judge": "mock:mock",
-    "score": 20,
+    "score": 22,
     "promptSha256": "2560c209e127cc275249fef4338c2707c6f74b9ab33a40c1ca58453f23afe784",
-    "imageSha256": "03bc487861947eda9f86b2cffa288d7a042e0553fd236d83c29cb3e15e7c6ad6",
-    "runId": "2026-06-24T09-33-00-079Z",
-    "generatedAt": "2026-06-24T09:33:01.579Z"
+    "imageSha256": "15ab103069762877c432664e060c8dfc1d43648451001b524617493bb232c573",
+    "runId": "2026-06-24T19-16-09-415Z",
+    "generatedAt": "2026-06-24T19:16:12.450Z"
   },
   "coconut": {
     "asset": "coconut",

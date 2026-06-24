@@ -101,13 +101,42 @@ export async function pollinationsGenerate(asset, prompt, attempt) {
   br /= 4;
   bg /= 4;
   bb /= 4;
-  for (let i = 0; i < d.length; i += 4) {
-    const dist = Math.abs(d[i] - br) + Math.abs(d[i + 1] - bg) + Math.abs(d[i + 2] - bb);
-    if (dist < 70) {
-      d[i + 3] = 0; // background
-    } else if (dist < 130) {
-      d[i + 3] = Math.round(d[i + 3] * ((dist - 70) / 60)); // soft edge
+  // Key out ONLY the background connected to the border (flood-fill), never interior pixels that
+  // merely match the bg colour - that is what punched holes through the coconut/mango. The
+  // deterministic grader (interior-hole check) is the safety net that fails the build if this ever
+  // regresses, but fixing it at the source means it does not happen in the first place.
+  const distAt = (p) => Math.abs(d[p * 4] - br) + Math.abs(d[p * 4 + 1] - bg) + Math.abs(d[p * 4 + 2] - bb);
+  const reach = new Uint8Array(W * H);
+  const stack = [];
+  const seedBg = (x, y) => {
+    const p = y * W + x;
+    if (!reach[p] && distAt(p) < 130) {
+      reach[p] = 1;
+      stack.push(p);
     }
+  };
+  for (let x = 0; x < W; x++) {
+    seedBg(x, 0);
+    seedBg(x, H - 1);
+  }
+  for (let y = 0; y < H; y++) {
+    seedBg(0, y);
+    seedBg(W - 1, y);
+  }
+  while (stack.length) {
+    const p = stack.pop();
+    const x = p % W;
+    const y = (p / W) | 0;
+    if (x > 0) seedBg(x - 1, y);
+    if (x < W - 1) seedBg(x + 1, y);
+    if (y > 0) seedBg(x, y - 1);
+    if (y < H - 1) seedBg(x, y + 1);
+  }
+  for (let p = 0; p < W * H; p++) {
+    if (!reach[p]) continue; // interior pixel: keep it, even if it matches the bg colour
+    const dist = distAt(p);
+    if (dist < 70) d[p * 4 + 3] = 0;
+    else if (dist < 130) d[p * 4 + 3] = Math.round(d[p * 4 + 3] * ((dist - 70) / 60));
   }
   img.autocrop(); // trim the now-transparent border
   img.contain({ w: SIZE, h: SIZE }); // square, keep aspect, transparent padding

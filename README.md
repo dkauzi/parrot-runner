@@ -126,6 +126,13 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 12. **Live dashboard == local.** `dashboard.html` is fully self-contained (data/images inlined), so
     Pages serves exactly what's built - `build:pages` just copies it, no browser or keys in CI.
 
+13. **Quality is checked before prod, deterministically.** A sprite passed with a *hole* punched
+    through it (the chroma-key removed interior pixels matching the background). Fixed at the source
+    (the key now flood-fills background from the border only) AND caught for good by a deterministic
+    interior-hole gate that grades the *shipped* sprites in CI (`validate:sprites`). Its tolerance is
+    config-as-data (`agents.config.json` -> `thresholds.maxHolePct`): tuning it is a versioned edit,
+    not a code change. Same pattern as prompt-as-code.
+
 > The hard part was never the code - it was the **judgment**: where to draw the AI/deterministic line,
 > why the AI judge can't be the sole arbiter, and catching a camera bug the green tests sailed past.
 

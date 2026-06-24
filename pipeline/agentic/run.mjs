@@ -58,6 +58,7 @@ const config = {
   geminiModel: process.env.GEMINI_MODEL || AGENTS.judge?.geminiModel || 'gemini-2.5-flash',
   threshold: Number(process.env.GRADE_THRESHOLD || AGENTS.thresholds?.accept || 18),
   minCriterion: AGENTS.thresholds?.minCriterion ?? 3,
+  maxHolePct: AGENTS.thresholds?.maxHolePct ?? 0.4, // config-as-data: interior-hole tolerance
   maxAttempts: Number(process.env.MAX_ATTEMPTS || AGENTS.thresholds?.maxAttempts || 3),
   outDir: join(HERE, 'out'),
   runsDir: join(HERE, 'runs'),
@@ -170,7 +171,7 @@ async function run() {
       // STAGE 2b: DETERMINISTIC quality grade - always runs. Catches opaque-background / empty /
       // off-centre sprites without an LLM (this is what should have caught the pink-box bug), and
       // is the FALLBACK verdict when the AI judge is unavailable.
-      const det = await gradeSprite(buffer);
+      const det = await gradeSprite(buffer, { maxHolePct: config.maxHolePct });
       if (!det.ok) {
         logLine(logPath, {
           runId, asset, attempt, stage: 'validate', accepted: false,

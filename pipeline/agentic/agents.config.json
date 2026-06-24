@@ -12,7 +12,8 @@
   "thresholds": {
     "accept": 18,
     "minCriterion": 3,
-    "maxAttempts": 3
+    "maxAttempts": 3,
+    "maxHolePct": 0.4
   },
   "prompts": {
     "_comment": "Prompt-as-code: the prompt TEXT lives in prompts/*.md (versioned, diffable). These are the version tags recorded with each run for audit + rollback.",
