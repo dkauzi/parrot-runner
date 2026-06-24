@@ -28,5 +28,25 @@
     "imageSha256": "91a99958a0386b9e1e61355197be8911d7f265ea741ed15dd0c2fe8da3c81209",
     "runId": "2026-06-24T05-32-03-543Z",
     "generatedAt": "2026-06-24T05:33:39.159Z"
+  },
+  "coconut": {
+    "asset": "coconut",
+    "generator": "pollinations",
+    "judge": "gemini:gemini-2.5-flash",
+    "score": 23,
+    "promptSha256": "e40e1d51f5fbbf44f337c03c321fdb29ccbc9726c253700193a2604b59031cf9",
+    "imageSha256": "9b0a335686696c4c24b61f18ada0f45dc2cfefe411999cd05f0d9550d79d0563",
+    "runId": "2026-06-24T08-14-05-583Z",
+    "generatedAt": "2026-06-24T08:14:13.957Z"
+  },
+  "banana": {
+    "asset": "banana",
+    "generator": "pollinations",
+    "judge": "gemini:gemini-2.5-flash",
+    "score": 23,
+    "promptSha256": "6d6602818df314d1f70f292d8b72231a888eea09406f9bb06c179340283ae3ad",
+    "imageSha256": "85dc5b2b2e9a44509cf48027464f7b376f228c845cf78b093b7177ff4be38474",
+    "runId": "2026-06-24T08-14-14-166Z",
+    "generatedAt": "2026-06-24T08:14:58.672Z"
   }
 }

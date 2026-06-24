@@ -34,13 +34,13 @@ export class Spawner {
 
   constructor(
     private scene: Scene,
-    fruitTex: Texture,
+    private fruitTextures: Texture[],
     treeTex: Texture,
     private fruitSpec: SpriteSpec,
     treeSpec: SpriteSpec,
     private config: GameConfig
   ) {
-    for (let i = 0; i < FRUIT_POOL; i++) this.fruit.push(this.make(fruitTex, fruitSpec));
+    for (let i = 0; i < FRUIT_POOL; i++) this.fruit.push(this.make(fruitTextures[0], fruitSpec));
     for (let i = 0; i < TREE_POOL; i++) this.trees.push(this.make(treeTex, treeSpec));
   }
 
@@ -112,6 +112,9 @@ export class Spawner {
     it.phase = Math.random() * Math.PI * 2;
     it.baseY = rand(1.0, 3.4);
     const mat = it.sprite.material as SpriteMaterial;
+    // Pick a random fruit variety per spawn so the lane shows mixed kinds (like the reference).
+    mat.map = this.fruitTextures[Math.floor(Math.random() * this.fruitTextures.length)];
+    mat.needsUpdate = true;
     mat.opacity = 1;
     mat.rotation = 0;
     it.sprite.scale.set(it.baseScaleX, it.baseScaleY, 1);

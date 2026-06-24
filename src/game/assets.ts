@@ -47,7 +47,7 @@ export const MANIFEST: Manifest = validateManifest(manifest);
  * self-contained. If a sprite is absent we fall back to the procedural placeholder, so the game
  * always runs. To ship the AI-generated art: add the PNGs, gate them with pipeline/validate.mjs.
  */
-const SPRITE_URLS: Partial<Record<'parrot' | 'fruit' | 'tree', string>> = (() => {
+const SPRITE_URLS: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   try {
     const ctx = require.context('../../assets/sprites', false, /\.png$/);
@@ -77,6 +77,17 @@ export function makeParrotTexture(): Texture {
 /** Fruit texture: real PNG if present (tint ignored), else procedural placeholder tinted per variant. */
 export function makeFruitTexture(color: number): Texture {
   return SPRITE_URLS.fruit ? fromUrl(SPRITE_URLS.fruit) : proceduralFruit(color);
+}
+/**
+ * All collectible textures: the base fruit plus any extra AI-generated varieties (coconut, banana,
+ * papaya) that exist. The spawner picks one at random per spawn, matching the reference's variety.
+ */
+export function makeCollectibleTextures(color: number): Texture[] {
+  const out = [makeFruitTexture(color)];
+  for (const name of ['coconut', 'banana', 'papaya']) {
+    if (SPRITE_URLS[name]) out.push(fromUrl(SPRITE_URLS[name]));
+  }
+  return out;
 }
 /** Tree texture: real PNG if present, else procedural placeholder. */
 export function makeTreeTexture(): Texture {

@@ -9,7 +9,7 @@ import {
   WebGLRenderer,
 } from 'three';
 import { GameConfig } from './config';
-import { MANIFEST, makeFruitTexture, makeTreeTexture } from './assets';
+import { MANIFEST, makeCollectibleTextures, makeTreeTexture } from './assets';
 import { Parrot } from './Parrot';
 import { Spawner } from './Spawner';
 import { collect } from './Collision';
@@ -46,6 +46,7 @@ export class Game {
   private distance = 0;
   private elapsed = 0;
   private chain = 0;
+  private pickups = 0;
   private lastPickupAt = -999;
 
   private fpsSmoothed = 60;
@@ -92,7 +93,7 @@ export class Game {
     this.scene.add(this.parrot.object);
     this.spawner = new Spawner(
       this.scene,
-      makeFruitTexture(config.fruitColor),
+      makeCollectibleTextures(config.fruitColor),
       makeTreeTexture(),
       s.fruit,
       s.tree,
@@ -126,6 +127,7 @@ export class Game {
     this.spawner.reset();
     this.parrot.reset();
     this.score = 0;
+    this.pickups = 0;
     this.distance = 0;
     this.elapsed = 0;
     this.chain = 0;
@@ -142,6 +144,20 @@ export class Game {
     this.state = 'gameover';
     endChime();
     this.ui.showEnd(this.score);
+
+    // Gameplay telemetry — the SEED of the performance flywheel (the data we're "blind to" today):
+    // which variant, how many pickups, how long. A backend would collect this to pick the winning
+    // asset/variant by real play, not just the aesthetic rubric. Here we emit it on a global hook.
+    const telemetry = {
+      variant: this.config.name,
+      score: this.score,
+      pickups: this.pickups,
+      durationS: Math.round(this.elapsed),
+      at: new Date().toISOString(),
+    };
+    (window as unknown as { __telemetry: unknown }).__telemetry = telemetry;
+    // eslint-disable-next-line no-console
+    console.log('[telemetry]', JSON.stringify(telemetry));
   }
 
   private tick(): void {
@@ -183,6 +199,7 @@ export class Game {
       this.chain = continuesCombo(this.elapsed, this.lastPickupAt) ? this.chain + 1 : 1;
       this.lastPickupAt = this.elapsed;
       this.score += pickupValue(this.config.fruitPoints, this.chain);
+      this.pickups++;
       this.spawner.pickup(fruit[i]);
       this.ui.setScore(this.score);
       this.ui.flashCombo(comboMultiplier(this.chain));

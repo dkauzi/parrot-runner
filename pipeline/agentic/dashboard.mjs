@@ -55,6 +55,22 @@ try {
   /* none yet */
 }
 
+// Golden eval: the judge's agreement with known-correct labels (drift detector).
+let golden = null;
+try {
+  golden = JSON.parse(readFileSync(join(HERE, 'out', 'golden-eval.json'), 'utf8'));
+} catch {
+  /* not run yet */
+}
+const goldenRows = golden
+  ? golden.results
+      .map(
+        (r) =>
+          `<tr><td>${r.name}</td><td>${r.expect}</td><td>${r.got}</td><td>${r.match ? '<span class="ok">✓</span>' : '<span class="warn">✗ drift</span>'}</td></tr>`
+      )
+      .join('')
+  : '';
+
 // Provenance: re-fingerprint each committed sprite and compare to its recorded generation hash.
 let provenance = {};
 try {
@@ -308,6 +324,15 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      : ''
  }
 
+ ${
+   golden
+     ? `<h2>Judge calibration &mdash; who watches the judge?</h2>
+ <div class="sub" style="margin-bottom:10px">The judge is an LLM, so it can drift (a model swap silently moves the quality bar). A <b>golden set</b> of labeled cases &mdash; real good sprites that must pass, plus a deliberately bad image that must be rejected &mdash; checks the judge's agreement with known-correct verdicts. A drop in agreement means the <i>evaluator</i> regressed, caught here before it corrupts future grades.</div>
+ <div class="cards"><div class="card"><div class="v">${golden.agreement}%</div><div class="l">judge agreement</div><div class="h">${golden.provider}:${golden.model}</div></div></div>
+ <table style="margin-top:12px"><thead><tr><th>Golden case</th><th>Expected</th><th>Judge said</th><th>Match</th></tr></thead><tbody>${goldenRows}</tbody></table>`
+     : ''
+ }
+
  <h2>Per-asset scores (final verdict)</h2>
  <table>
   <thead><tr><th>Asset</th><th>Status</th><th>Total</th><th>Tries</th>${critHead}</tr></thead>
@@ -345,6 +370,9 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
   <p>Every asset is already a discrete, logged record, so feeding the ad network's performance webhook into
   <code>runs/</code> flips the north-star from "rubric score" to "variant win-rate," closing the loop from
   production back into generation. <b>That is the data flywheel; this dashboard is its first half.</b></p>
+  <p>The game already emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups,
+  score, duration) &mdash; the seed of that loop. A collector + champion/challenger selector is the
+  remaining piece (a backend, out of scope for a take-home).</p>
  </div>
 </main></body></html>`;
 
