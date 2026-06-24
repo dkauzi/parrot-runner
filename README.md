@@ -128,7 +128,6 @@ npm run capture:gif       # animated gameplay GIF for the dashboard
 ---
 
 ## 🎯 The closed loop (the data flywheel)
-
 The rubric measures *"does the asset look good?"*. The real north-star is *"which variant **performs in
 play**?"*. The game emits `window.__telemetry` (variant, score, pickups, duration) every run;
 `collect-telemetry.mjs` aggregates it **per variant** into an engagement score, and the dashboard's
@@ -140,6 +139,8 @@ webhook — so production play feeds straight back into what the pipeline genera
 generate ─▶ grade ─▶ ship variant ─▶ 🎯 real-play telemetry ─▶ rank ─▶ generate more of the winner
                                           (closes here)
 ```
+
+Run it: `npm run telemetry` &nbsp;then&nbsp; `npm run pipeline:dashboard`.
 
 Run it: `npm run telemetry` &nbsp;then&nbsp; `npm run pipeline:dashboard`.
 
