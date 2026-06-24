@@ -59,7 +59,7 @@
  <div class="sub">An AI generates each game asset, automatic rules and a second AI check it, and anything
  uncertain goes to a human. This page shows the actual decision trail, every quality gate, the real-play
  loop, and what it costs - readable whether or not you write code.
- 31 run(s) logged. Latest judge: <b>mock</b> (claude-opus-4-8). <span class="muted">Updated 2026-06-24 15:15 UTC.</span></div>
+ 31 run(s) logged. Latest judge: <b>mock</b> (claude-opus-4-8). <span class="muted">Updated 2026-06-24 15:19 UTC.</span></div>
  <div class="legend">
    <span class="lg">🟢 deterministic code (exact)</span>
    <span class="lg">🔵 AI (creative/judgment)</span>
@@ -188,16 +188,14 @@
  <table><thead><tr><th>Practice</th><th>What it means</th><th>Where</th></tr></thead><tbody><tr><td><b>Deterministic vs judgment split</b></td><td>AI only where judgment is needed; code everywhere else</td><td class="mono">the table above</td></tr><tr><td><b>Fail-loud validation at boundaries</b></td><td>Bad data is rejected and surfaced, never flows downstream</td><td class="mono">validate.mjs · validate-build.mjs · validateScene</td></tr><tr><td><b>Prompt as code</b></td><td>Generation prompts versioned in git, reviewable, roll-back-able</td><td class="mono">prompts/*.md</td></tr><tr><td><b>Closed-loop evaluation</b></td><td>Judge feedback rewrites the prompt until it passes</td><td class="mono">the agentic loop above</td></tr><tr><td><b>Human-in-the-loop</b></td><td>Low-confidence / unverifiable output escalates to a person</td><td class="mono">HITL - never a guess</td></tr><tr><td><b>Resilience</b></td><td>Exponential backoff on 429/5xx; retries don't double-fire</td><td class="mono">judge.mjs fetchWithBackoff</td></tr><tr><td><b>Swappable adapters</b></td><td>Change a provider/model without touching the pipeline</td><td class="mono">generate.mjs · judge.mjs</td></tr><tr><td><b>Observability</b></td><td>Every decision logged; this dashboard reads the trace</td><td class="mono">runs/*.jsonl + this page</td></tr><tr><td><b>Provenance / audit</b></td><td>Each sprite hashed and proven AI-origin</td><td class="mono">verify-provenance.mjs</td></tr><tr><td><b>Single source of truth</b></td><td>One rubric, one config, one decision point per rule</td><td class="mono">rubric.mjs · run.mjs config</td></tr></tbody></table>
 
  <div class="blind">
-  <h3>What this does NOT measure yet (the next data to wire in)</h3>
-  <p>This tracks <b>internal quality</b> (the rubric) and <b>correctness</b> (the gates). It does <b>not</b>
-  yet track <b>real-world ad performance</b> - click-through, install rate, playtime - which should
-  ultimately pick the winning variant.</p>
-  <p>Every asset is already a discrete, logged record, so feeding the ad network's performance webhook into
-  <code>runs/</code> flips the north-star from "rubric score" to "variant win-rate," closing the loop from
-  production back into generation. <b>That is the data flywheel, and it is now closed end-to-end on this page.</b></p>
-  <p>The game emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups, score,
-  duration); the collector aggregates it per variant into engagement, and the champion/challenger
-  selector recommends what to promote. Swapping the local collector for a production performance
-  webhook is the only remaining change - the shape is identical.</p>
+  <h3>What's real here, and the one thing still synthetic</h3>
+  <p><b>The whole loop is built and closed on this page:</b> internal quality (the rubric), correctness
+  (the gates), and real-play performance (the telemetry collector ranks variants by engagement and the
+  champion/challenger selector recommends what to promote).</p>
+  <p>The one input still <b>synthetic</b> is <i>who</i> plays: engagement comes from automated Playwright
+  runs, not real users, so it can't yet see true ad performance (click-through, install rate, playtime).
+  The game emits <code>window.__telemetry</code> (variant, pickups, score, duration) and the collector
+  already consumes exactly that shape, so going live is a <b>one-line swap</b>: point the collector at the
+  ad network's performance webhook instead of local runs. Same shape, real users, same panels.</p>
  </div>
 </main></body></html>

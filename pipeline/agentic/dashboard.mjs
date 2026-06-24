@@ -605,17 +605,15 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
  <table><thead><tr><th>Practice</th><th>What it means</th><th>Where</th></tr></thead><tbody>${practiceRows}</tbody></table>
 
  <div class="blind">
-  <h3>What this does NOT measure yet (the next data to wire in)</h3>
-  <p>This tracks <b>internal quality</b> (the rubric) and <b>correctness</b> (the gates). It does <b>not</b>
-  yet track <b>real-world ad performance</b> - click-through, install rate, playtime - which should
-  ultimately pick the winning variant.</p>
-  <p>Every asset is already a discrete, logged record, so feeding the ad network's performance webhook into
-  <code>runs/</code> flips the north-star from "rubric score" to "variant win-rate," closing the loop from
-  production back into generation. <b>That is the data flywheel, and it is now closed end-to-end on this page.</b></p>
-  <p>The game emits a per-session telemetry hook (<code>window.__telemetry</code>: variant, pickups, score,
-  duration); the collector aggregates it per variant into engagement, and the champion/challenger
-  selector recommends what to promote. Swapping the local collector for a production performance
-  webhook is the only remaining change - the shape is identical.</p>
+  <h3>What's real here, and the one thing still synthetic</h3>
+  <p><b>The whole loop is built and closed on this page:</b> internal quality (the rubric), correctness
+  (the gates), and real-play performance (the telemetry collector ranks variants by engagement and the
+  champion/challenger selector recommends what to promote).</p>
+  <p>The one input still <b>synthetic</b> is <i>who</i> plays: engagement comes from automated Playwright
+  runs, not real users, so it can't yet see true ad performance (click-through, install rate, playtime).
+  The game emits <code>window.__telemetry</code> (variant, pickups, score, duration) and the collector
+  already consumes exactly that shape, so going live is a <b>one-line swap</b>: point the collector at the
+  ad network's performance webhook instead of local runs. Same shape, real users, same panels.</p>
  </div>
 </main></body></html>`;
 
