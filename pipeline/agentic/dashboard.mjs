@@ -611,12 +611,13 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
    ${performance.perVariant
      .map((v) =>
        performance.realUsers
-         ? `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.installRatePct}%</b></td><td>${v.ctrPct}%</td><td>${v.avgPlaytimeS}s</td><td>${v.sessions}</td></tr>`
+         ? `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.installRatePct}%</b> <span class="sub">95% CI [${v.installLoPct}-${v.installHiPct}]</span></td><td>${v.ctrPct}%</td><td>${v.avgPlaytimeS}s</td><td>${v.sessions}</td></tr>`
          : `<tr><td>${v.variant === performance.winner ? '🏆 ' : ''}${v.variant}</td><td><b>${v.engagement}</b></td><td>${v.winSharePct}%</td><td>${v.avgScore}</td><td>${v.sessions}</td></tr>`
      )
      .join('')}
  </tbody></table>
- <div class="sub" style="margin-top:8px"><b>Recommendation:</b> ${performance.recommendation}</div>`
+ <div class="sub" style="margin-top:8px">${performance.realUsers ? (performance.significant ? '✅ <b>Significant</b> ' : '⏸ <b>Hold</b> ') : ''}${performance.recommendation}</div>
+ ${performance.realUsers ? `<div class="sub">We only promote a variant when its install-rate 95% confidence interval clears the runner-up's (non-overlapping) AND the sample is large enough. Otherwise the lead is noise and we keep collecting. No promoting on a coin-flip.</div>` : ''}`
      : ''
  }
 

@@ -21,7 +21,7 @@ const arg = (k, d) => {
   const i = process.argv.indexOf(`--${k}`);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : d;
 };
-const SESSIONS = Number(arg('sessions', 2500)); // enough volume for stable rates
+const SESSIONS = Number(arg('sessions', 6000)); // enough volume for stable rates
 
 // Per-variant real-user behaviour profiles (probabilities + playtime seconds). Reproducible via a
 // seeded RNG so the dashboard is stable between runs. Rush converts harder but plays shorter; zen
