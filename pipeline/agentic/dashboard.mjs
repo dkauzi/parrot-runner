@@ -85,6 +85,12 @@ try {
 } catch {
   /* not run */
 }
+let shadow = null;
+try {
+  shadow = JSON.parse(readFileSync(join(HERE, 'out', 'shadow-eval.json'), 'utf8'));
+} catch {
+  /* not run */
+}
 try {
   screenshot = 'data:image/png;base64,' + readFileSync(join(HERE, 'out', 'game-screenshot.png')).toString('base64');
 } catch {
@@ -483,6 +489,18 @@ const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
      ? `<h2>Operational insights &mdash; what caused the most rework</h2>
  <div class="sub" style="margin-bottom:10px">Aggregated across all runs. Biggest source of re-work: <b>${topCause[0]}</b> &mdash; where to focus tooling next. (Validation rejects are <i>good</i>: bad assets caught early and never shipped &mdash; fail loud, not silent.)</div>
  <table><thead><tr><th>Cause</th><th>Count</th></tr></thead><tbody>${insightRows}</tbody></table>`
+     : ''
+ }
+
+ ${
+   shadow
+     ? `<h2>Champion vs Challenger &mdash; safe prompt rollout</h2>
+ <div class="sub" style="margin-bottom:10px">A candidate prompt is shadow-run beside the live one, graded the same way, and only recommended for promotion when it clearly wins. The system never auto-swaps &mdash; <b>the human approves the version bump</b>. Judge: ${shadow.judge}.</div>
+ <table><thead><tr><th>Prompt</th><th>Avg score</th><th>Samples</th><th>Passes deterministic gate</th></tr></thead><tbody>
+   <tr><td>${shadow.champion.label}</td><td><b>${shadow.champion.avgScore}</b></td><td>${shadow.champion.n}</td><td>${shadow.champion.allDetOk ? '✅' : '❌'}</td></tr>
+   <tr><td>${shadow.challenger.label}</td><td><b>${shadow.challenger.avgScore}</b></td><td>${shadow.challenger.n}</td><td>${shadow.challenger.allDetOk ? '✅' : '❌'}</td></tr>
+ </tbody></table>
+ <div class="sub" style="margin-top:8px">Δ ${shadow.delta >= 0 ? '+' : ''}${shadow.delta} (margin ${shadow.margin}) &rarr; <b>${shadow.recommendation}</b>. ${shadow.note}</div>`
      : ''
  }
 
