@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * Visual QA — play the built game, screenshot it, and have the AI judge REVIEW THE LIVE SCENE.
- *
- * Functional e2e tests prove the game loads and the loop runs, but they can't see that (say) the
- * sprites have ugly colored background boxes. This launches the real playable, captures a frame,
- * and asks the game-designer AI judge "does this look right?" — catching visual regressions that
- * pass every functional test. The screenshot + verdict are written for the dashboard.
+ * Visual QA — play the built game, screenshot ACTUAL GAMEPLAY, and verify it two ways:
+ *   1. DETERMINISTIC checks (always run): stray magenta/pink in the scene = leftover chroma-key.
+ *   2. AI judge (strict game-designer): upside-down bird, texture seams, dirty cutouts, etc.
+ * The AI is not trusted alone (it gave a buggy frame 5/5 once); the deterministic check is the
+ * floor. Captures during play (not the end card) so it sees the real thing. Writes screenshot +
+ * verdict for the dashboard.
  *
  * Run:  GEMINI_API_KEY=... node pipeline/agentic/visual-eval.mjs   (needs the built dist + a key)
  */
 
 import { chromium } from '@playwright/test';
+import { Jimp } from 'jimp';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,50 +21,69 @@ const ROOT = join(HERE, '..', '..');
 const OUT = join(HERE, 'out');
 mkdirSync(OUT, { recursive: true });
 
-const fileUrl = 'file://' + join(ROOT, 'dist', 'index.html');
+// ---- capture real gameplay (start a run, let it play, then snapshot) ----
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-await page.goto(`${fileUrl}?test=fastend`, { waitUntil: 'load' });
-await page.waitForTimeout(1000); // play a moment
+await page.goto('file://' + join(ROOT, 'dist', 'index.html'), { waitUntil: 'load' });
+await page.click('#start-btn').catch(() => {});
+await page.waitForTimeout(1200);
 const shot = await page.screenshot();
 await browser.close();
 writeFileSync(join(OUT, 'game-screenshot.png'), shot);
-console.log('Screenshot saved: pipeline/agentic/out/game-screenshot.png');
 
+// ---- DETERMINISTIC check: stray magenta/pink (leftover chroma-key) anywhere in the frame ----
+const img = await Jimp.read(shot);
+const d = img.bitmap.data;
+let magenta = 0;
+for (let i = 0; i < d.length; i += 4) {
+  const r = d[i];
+  const g = d[i + 1];
+  const b = d[i + 2];
+  if (r > 170 && b > 120 && g < Math.min(r, b) - 50) magenta++; // pink/magenta: R&B high, G low
+}
+const magentaPct = (magenta / (d.length / 4)) * 100;
+const detIssues = [];
+if (magentaPct > 1.5) detIssues.push(`stray magenta/pink in ${magentaPct.toFixed(1)}% of the frame (leftover chroma-key)`);
+
+// ---- AI judge (strict) ----
 const key = process.env.GEMINI_API_KEY;
-if (!key) {
-  console.log('No GEMINI_API_KEY — screenshot saved; skipping the AI visual judge.');
-  process.exit(0);
+let ai = { issues: [], score: null, summary: 'AI judge skipped (no key)' };
+if (key) {
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const prompt =
+    'You are a STRICT senior game-designer doing visual QA on a GAMEPLAY screenshot of a tropical-' +
+    'jungle flying collectible game. Hunt for DEFECTS and report each: is the bird/parrot upright ' +
+    'and flying forward (NOT upside-down or nose-diving)? Are collectible/tree sprites clean cutouts ' +
+    '(no coloured background boxes)? Any visible texture SEAMS or mirrored tiling on the ground? ' +
+    'Stray pink/magenta blotches? Floating or wrongly-scaled objects? Be harsh: 5 = flawless. ' +
+    'Respond ONLY JSON: {"score": <integer 1-5>, "issues": ["..."], "summary": "<one sentence>"}.';
+  const body = {
+    contents: [{ parts: [{ inline_data: { mime_type: 'image/png', data: shot.toString('base64') } }, { text: prompt }] }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+  };
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  try {
+    const json = await res.json();
+    ai = { model, ...JSON.parse(json.candidates[0].content.parts[0].text) };
+  } catch {
+    // AI judge is a failure point — when it's down, do NOT fail; the deterministic gate decides.
+    ai = { issues: [], score: null, summary: `AI judge unavailable (HTTP ${res.status}) — deterministic checks used`, unavailable: true };
+  }
 }
 
-const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const prompt =
-  'You are a senior game designer doing VISUAL QA on a screenshot of a tropical-jungle flying ' +
-  'collectible game. Check carefully: (1) are the collectible/tree sprites CLEAN cutouts with ' +
-  'transparent backgrounds — i.e. NO solid coloured rectangle boxes behind them? (2) does the ' +
-  'scene look polished and readable (jungle background, a bird, fruit to collect, a ground)? ' +
-  '(3) any obvious rendering bugs? Respond ONLY with JSON: ' +
-  '{"ok": <boolean>, "score": <integer 1-5>, "issues": ["..."], "summary": "<one sentence>"}.';
-
-const body = {
-  contents: [
-    { parts: [{ inline_data: { mime_type: 'image/png', data: shot.toString('base64') } }, { text: prompt }] },
-  ],
-  generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+const issues = [...detIssues, ...(ai.issues || [])];
+const verdict = {
+  ok: issues.length === 0, // deterministic OR AI issue fails it — code is the floor, AI adds taste
+  score: ai.score,
+  issues,
+  summary: ai.summary,
+  deterministic: { magentaPct: Number(magentaPct.toFixed(1)), issues: detIssues },
+  model: ai.model || 'deterministic-only',
+  at: new Date().toISOString(),
 };
-const res = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-  { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
-);
-let verdict;
-try {
-  const json = await res.json();
-  verdict = JSON.parse(json?.candidates?.[0]?.content?.parts?.[0]?.text);
-} catch {
-  verdict = { ok: false, score: 0, issues: [`judge error (HTTP ${res.status})`], summary: 'judge unavailable' };
-}
-verdict.at = new Date().toISOString();
-verdict.model = model;
 writeFileSync(join(OUT, 'visual-eval.json'), JSON.stringify(verdict, null, 2));
-console.log('Visual QA verdict:', JSON.stringify(verdict));
+console.log('Visual QA:', JSON.stringify(verdict));
 process.exit(verdict.ok ? 0 : 1);

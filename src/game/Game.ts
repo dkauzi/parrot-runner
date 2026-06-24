@@ -102,8 +102,13 @@ export class Game {
     // trees and fruit passing the camera (like fixed lamp posts on a freeway), not by the ground.
     const groundTex = new TextureLoader().load(groundUrl);
     groundTex.wrapS = groundTex.wrapT = RepeatWrapping;
-    groundTex.repeat.set(6, 30);
-    const ground = new Mesh(new PlaneGeometry(60, 240), new MeshBasicMaterial({ map: groundTex, fog: true }));
+    groundTex.repeat.set(3, 20);
+    groundTex.offset.x = 0.5; // shift so no tile seam sits dead-centre in view
+    // Tint green (multiplies the texture) so any stray pink/purple in the AI floor reads as jungle.
+    const ground = new Mesh(
+      new PlaneGeometry(60, 240),
+      new MeshBasicMaterial({ map: groundTex, fog: true, color: 0x93c47d })
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.4, -100);
     this.scene.add(ground);
@@ -223,7 +228,7 @@ export class Game {
 
     this.updateFps(delta);
     this.applyShake(delta); // positions the camera from camBase (+ shake)
-    this.camera.lookAt(this.parrot.position.x * 0.2, 1.8, camZ - 6); // look down the path
+    this.camera.lookAt(this.parrot.position.x * 0.2, 2.0, camZ - 16); // look level down the path (not steeply down)
     this.renderer.render(this.scene, this.camera);
 
     // Heartbeat for the headless test: proves the real game loop is advancing (cheaper and more

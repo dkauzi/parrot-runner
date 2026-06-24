@@ -40,7 +40,7 @@ export class Parrot {
     this.object = new Group();
     this.object.position.set(0, 2, Z);
     this.facing = new Group();
-    this.facing.rotation.y = FACING_Y;
+    this.facing.rotation.y = FACING_Y; // yaw to face away from the camera (we see its back)
     this.object.add(this.facing);
     this.load(spec.scale);
   }

@@ -1,5 +1,5 @@
-# Asset: Ground texture (scene) — v0.1
+# Asset: Ground texture (scene) — v0.2
 ## Prompt
 ```
-Top-down aerial view of a dense tropical jungle canopy and forest floor, lush green ferns, broad leaves, moss and dappled sunlight, seamless repeating texture, no horizon.
+Seamless tileable top-down texture of dense green tropical jungle ferns and leaves, uniform lush green foliage only, soft even lighting, NO flowers, no pink, no purple, no bright colours, no horizon, no large features.
 ```
