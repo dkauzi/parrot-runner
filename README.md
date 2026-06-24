@@ -61,4 +61,3 @@ npm run ci             # unit tests -> asset gate -> build -> build gate -> head
 - `pipeline/agentic/` - the agentic generate/judge pipeline + observability dashboard
 - `pipeline/validate.mjs` / `validate-build.mjs` - deterministic asset + build gates (zero-dep)
 - `pipeline/grade.md` - the rubric the LLM judge scores against
-- `DECISIONS.md` - the three interview answers, pre-structured, filled as you go
