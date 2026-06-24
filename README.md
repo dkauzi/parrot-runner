@@ -10,13 +10,15 @@
 ![assets](https://img.shields.io/badge/assets-AI%E2%80%91generated%20%2B%20verified-a371f7)
 
 A forward-flying parrot collecting fruit through a jungle - **built as a playable ad** - plus the
+
 **agentic AI pipeline that generates and quality-controls its art**. 
 The game is the artefact; 
 The pipeline is the point.
 
 ▶️ **Play it here :** https://dkauzi.github.io/parrot-runner/ &nbsp;·&nbsp; 
 
-📊 **Dashboard observability is build in from day 1:** https://dkauzi.github.io/parrot-runner/dashboard.html
+📊 **Dashboard observability is build in from day 1:** 
+https://dkauzi.github.io/parrot-runner/dashboard.html
 
 ![Gameplay](pipeline/agentic/game.gif)
 
