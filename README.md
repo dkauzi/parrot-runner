@@ -177,3 +177,11 @@ Run it: `npm run telemetry` &nbsp;then&nbsp; `npm run pipeline:dashboard`.
 Run it: `npm run telemetry` &nbsp;then&nbsp; `npm run pipeline:dashboard`.
 
 See `AGENTIC.md` (pipeline deep-dive), `ARCHITECTURE.md`, `REQUIREMENTS.md` (assignment compliance).
+
+##V2  Would Have: 
+
+##Content safety / guardrails.
+Brand-safety / NSFW filter on generated art,  prompt-injection check prompt edits,  check that an asset is on-brand.
+
+##Grounding / RAG, style coherence.
+Each asset Grounds generation in a brand/style reference. RAG to avoid drift; Scene coherence judged.
